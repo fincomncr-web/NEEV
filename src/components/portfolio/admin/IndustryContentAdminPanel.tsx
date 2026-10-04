@@ -14,7 +14,7 @@ export default function IndustryContentAdminPanel({ passcode }: { passcode: stri
   const [body, setBody] = useState("");
 
   async function load() {
-    const res = await fetch("/api/portfolio/industry-content");
+    const res = await fetch("/api/portfolio/industry-content", { headers: { "x-neev-admin": passcode } });
     const data = await res.json();
     setContent(data.content ?? []);
   }
