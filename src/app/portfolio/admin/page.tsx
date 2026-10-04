@@ -89,16 +89,16 @@ export default function PortfolioAdminPage() {
       </div>
 
       <section key={tab}>
-        {tab === "overview" && <AdminOverviewPanel />}
+        {tab === "overview" && <AdminOverviewPanel passcode={passcode} />}
         {tab === "nav" && <NavAdminPanel passcode={passcode} />}
         {tab === "cash" && <CashAdminPanel passcode={passcode} />}
         {tab === "holdings" && <HoldingsAdminPanel passcode={passcode} />}
-        {tab === "transactions" && <TransactionsAdminPanel />}
+        {tab === "transactions" && <TransactionsAdminPanel passcode={passcode} />}
         {tab === "decisions" && <DecisionsAdminPanel passcode={passcode} />}
         {tab === "cases" && <InvestmentCasesAdminPanel passcode={passcode} />}
         {tab === "reports" && <ReportsAdminPanel passcode={passcode} />}
         {tab === "content" && <IndustryContentAdminPanel passcode={passcode} />}
-        {tab === "audit" && <AuditAdminPanel />}
+        {tab === "audit" && <AuditAdminPanel passcode={passcode} />}
       </section>
     </div>
   );
