@@ -5,11 +5,11 @@ import { FUND_CONFIG } from "./sectors";
 function quoteFor(symbol:string,quotes:QuoteData[]){return quotes.find(x=>x.symbol===symbol);}
 function canonicalSector(sector:string){const s=sector.trim().toLowerCase();if(s.includes("bank")||s.includes("financial"))return "Banking & Financial Services";if(s.includes("auto"))return "Automobile";if(s.includes("energy")||s.includes("infra"))return "Energy & Infrastructure";if(s==="fmcg")return "FMCG";if(s.includes("pharma"))return "Pharmaceuticals";return sector.trim()||"Unclassified";}
 
-export function computeFundValue(holdings:Holding[],quotes:QuoteData[],cashOverride?:number):number{
+export function computeFundValue(holdings:Holding[],quotes:QuoteData[]):number{
   const active=aggregateActive(holdings,quotes);
   const buyCash=holdings.reduce((s,h)=>s+h.buyCash,0);
   const sellCash=holdings.reduce((s,h)=>s+h.sellCash,0);
-  const cash=typeof cashOverride === "number" ? cashOverride : FUND_CONFIG.notionalAum-buyCash+sellCash;
+  const cash=FUND_CONFIG.notionalAum-buyCash+sellCash;
   return cash+active.reduce((s,h)=>s+h.marketValue,0);
 }
 
@@ -31,8 +31,8 @@ export function withLiveMetrics(holdings:Holding[],quotes:QuoteData[]):HoldingWi
 export function totalReturnPct(currentValue:number){return((currentValue-FUND_CONFIG.notionalAum)/FUND_CONFIG.notionalAum)*100;}
 
 export interface FundBreakdown{totalValue:number;cash:number;holdingsValue:number;cashPct:number;activeNames:number;maxSingleStockPct:number;maxSingleStockSymbol:string|null;maxSectorPct:number;maxSector:string|null;bySector:{sector:string;value:number;weightPct:number}[];missingQuoteSymbols:string[];quoteCoveragePct:number;valuationStatus:"COMPLETE"|"INCOMPLETE";}
-export function computeFundBreakdown(holdings:Holding[],quotes:QuoteData[],cashOverride?:number):FundBreakdown{
-  const rows=aggregateActive(holdings,quotes);const totalValue=computeFundValue(holdings,quotes,cashOverride);const holdingsValue=rows.reduce((s,h)=>s+h.marketValue,0);const cash=totalValue-holdingsValue;
+export function computeFundBreakdown(holdings:Holding[],quotes:QuoteData[]):FundBreakdown{
+  const rows=aggregateActive(holdings,quotes);const totalValue=computeFundValue(holdings,quotes);const holdingsValue=rows.reduce((s,h)=>s+h.marketValue,0);const cash=totalValue-holdingsValue;
   const sectorTotals=new Map<string,number>();for(const h of rows)sectorTotals.set(h.sector,(sectorTotals.get(h.sector)??0)+h.marketValue);
   const bySector=[...sectorTotals.entries()].map(([sector,value])=>({sector,value,weightPct:totalValue>0?value/totalValue*100:0})).sort((a,b)=>b.weightPct-a.weightPct);
   const top=rows.reduce<AggregateRow|null>((m,h)=>m===null||h.marketValue>m.marketValue?h:m,null);

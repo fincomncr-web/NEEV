@@ -217,7 +217,8 @@ export async function listCashLedger(): Promise<CashLedgerEntry[]> {
 export async function getCashBalance(): Promise<number | null> {
   if (!isSupabaseConfigured) return null;
   const { data, error } = await supabase.rpc("get_cash_balance");
-  if (isMissingTable(error)) return null;
+  // Keep public pages fail-soft until the ledger migration has been applied.
+  if (isMissingTable(error) || error?.code === "PGRST202") return null;
   if (error) throw new Error(`Failed to get cash balance: ${error.message}`);
   return Number(data ?? 0);
 }
