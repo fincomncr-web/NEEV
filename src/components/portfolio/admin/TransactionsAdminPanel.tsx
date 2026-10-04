@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Transaction } from "@/lib/portfolio-db";
 import { formatCompact, formatPrice } from "@/lib/format";
 
-export default function TransactionsAdminPanel() {
+export default function TransactionsAdminPanel({ passcode }: { passcode: string }) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [symbol, setSymbol] = useState("");
   const [type, setType] = useState<"ALL" | "BUY" | "SELL">("ALL");
@@ -15,7 +15,7 @@ export default function TransactionsAdminPanel() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/portfolio/transactions", { cache: "no-store" });
+      const res = await fetch("/api/portfolio/transactions", { cache: "no-store", headers: { "x-neev-admin": passcode } });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Unable to load transaction ledger.");
       setTransactions(data.transactions ?? []);
