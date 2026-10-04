@@ -7,4 +7,4 @@ export function checkPasscode(passcode:unknown){return !!PASSCODE&&typeof passco
 function token(){if(!SECRET)return null;const payload=`neev-admin.${Date.now()}`;return payload+"."+createHmac("sha256",SECRET).update(payload).digest("hex");}
 export function createAdminToken(){return token();}
 export function isValidAdminToken(value:string|null){if(!SECRET||!value)return false;const[payload,sig]=value.split(".");if(!payload||!sig)return false;const expected=createHmac("sha256",SECRET).update(payload).digest("hex");try{if(!timingSafeEqual(Buffer.from(sig),Buffer.from(expected)))return false;}catch{return false;}const ts=Number(payload.split(".")[1]);return Number.isFinite(ts)&&Date.now()-ts<8*60*60*1000;}
-export function isAdminRequest(req:NextRequest,passcode?:unknown){return checkPasscode(passcode)||isValidAdminToken(req.cookies.get(ADMIN_COOKIE)?.value??null);}
+export function isAdminRequest(req:NextRequest,passcode?:unknown){return checkPasscode(passcode)||checkPasscode(req.headers.get("x-neev-admin-passcode"))||isValidAdminToken(req.cookies.get(ADMIN_COOKIE)?.value??null);}
