@@ -15,7 +15,7 @@ export async function POST(req:NextRequest){
 export async function PATCH(req:NextRequest){
  const body=await req.json().catch(()=>null);if(!isAdminRequest(req, body?.passcode))return NextResponse.json({error:"Invalid admin passcode."},{status:401});
  const id=String(body?.id??"").trim(),exitDate=String(body?.exitDate??"").trim(),decisionId=String(body?.decisionId??"").trim();const exitPrice=Number(body?.exitPrice),quantity=body?.quantity==null?undefined:Number(body.quantity),fees=Number(body?.fees??0),taxes=Number(body?.taxes??0);
- if(!id||!exitDate||!decisionId||!Number.isFinite(exitPrice)||exitPrice<=0||quantity!==undefined&&(!Number.isFinite(quantity)||quantity<=0)||!Number.isFinite(fees)||fees<0||!Number.isFinite(taxes)||taxes<0))return NextResponse.json({error:"Position, exit date, exit price, quantity and an approved IC decision are required."},{status:400});
+ if(!id||!exitDate||!decisionId||!Number.isFinite(exitPrice)||exitPrice<=0||(quantity!==undefined&&(!Number.isFinite(quantity)||quantity<=0))||!Number.isFinite(fees)||fees<0||!Number.isFinite(taxes)||taxes<0)return NextResponse.json({error:"Position, exit date, exit price, quantity and an approved IC decision are required."},{status:400});
  try{const ok=await exitHolding(id,exitDate,exitPrice,decisionId,quantity,fees,taxes);if(!ok)return NextResponse.json({error:"Active position not found."},{status:404});revalidatePortfolioPages();return NextResponse.json({ok:true});}catch(err){return NextResponse.json({error:err instanceof Error?err.message:"Failed to post sell."},{status:400});}
 }
 export async function DELETE(){return NextResponse.json({error:"Positions are derived from the transaction ledger and cannot be deleted."},{status:405});}
