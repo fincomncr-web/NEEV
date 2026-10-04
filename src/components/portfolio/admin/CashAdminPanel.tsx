@@ -25,7 +25,7 @@ export default function CashAdminPanel({ passcode }: { passcode: string }) {
   async function load() {
     setLoading(true);
     try {
-      const r = await fetch("/api/portfolio/cash");
+      const r = await fetch("/api/portfolio/cash", { headers: { "x-neev-admin": passcode } });
       const d = await r.json();
       setEntries(d.entries ?? []);
       setBalance(typeof d.balance === "number" ? d.balance : null);
