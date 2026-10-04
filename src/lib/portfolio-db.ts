@@ -137,7 +137,18 @@ export async function addNavEntry(input: {
 export async function listTransactions(): Promise<Transaction[]> {
   const { data, error } = await supabase.from("transactions").select("*")
     .eq("status", "POSTED").order("trade_date", { ascending: false }).order("created_at", { ascending: false });
-  if (error) throw new Error(`Failed to list transactions: ${error.message}`);
+  if (error) {
+    // A new Supabase project may not have the transaction ledger yet.
+    // Treat it as empty so public pages can build and render while the schema
+    // is being provisioned. Other database errors still surface normally.
+    if (
+      error.code === "PGRST205" ||
+      error.message.includes("Could not find the table 'public.transactions'")
+    ) {
+      return [];
+    }
+    throw new Error(`Failed to list transactions: ${error.message}`);
+  }
   return (data ?? []).map((r) => ({
     id: r.id, symbol: r.symbol, companyName: r.company_name, sector: r.sector_code,
     transactionType: r.transaction_type, tradeDate: r.trade_date, settlementDate: r.settlement_date,
