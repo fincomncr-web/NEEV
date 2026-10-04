@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { listReports } from "@/lib/reports-db";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Reports & Disclosures",
   description: "NEEV factsheets, portfolio disclosures, research outputs and methodology.",
