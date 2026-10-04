@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
 export default function PasscodeGate({
   eyebrow,
@@ -14,24 +14,8 @@ export default function PasscodeGate({
   onUnlock: (passcode: string) => void;
 }) {
   const [value, setValue] = useState("");
-  const [checking, setChecking] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    fetch("/api/reports/verify", { cache: "no-store" })
-      .then(async (res) => {
-        if (alive && res.ok) onUnlock("");
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (alive) setChecking(false);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [onUnlock]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -48,7 +32,7 @@ export default function PasscodeGate({
         setError(data?.error ?? "Incorrect passcode.");
         return;
       }
-      onUnlock("");
+      onUnlock(value);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -73,17 +57,17 @@ export default function PasscodeGate({
               onChange={(e) => setValue(e.target.value)}
               placeholder="Enter passcode"
               autoFocus
-              disabled={checking || submitting}
+              disabled={submitting}
               className="mt-1.5 w-full rounded-md border border-border bg-surface px-4 py-2.5 text-center text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none disabled:opacity-60"
             />
           </label>
           {error && <p className="mt-2 text-sm text-down">{error}</p>}
           <button
             type="submit"
-            disabled={checking || submitting || !value}
+            disabled={submitting || !value}
             className="mt-4 w-full rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-[#070908] transition-opacity hover:opacity-90 disabled:opacity-60"
           >
-            {checking ? "Checking session…" : submitting ? "Authenticating…" : "Enter control room"}
+            {submitting ? "Authenticating…" : "Enter control room"}
           </button>
           <p className="mt-4 text-center text-[11px] leading-5 text-muted">
             Session expires automatically. Use “Lock admin” when leaving the console.
