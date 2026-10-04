@@ -28,6 +28,8 @@ Book of record:
 
 Investment Case → IC Decision → Transaction Ledger → Cash Ledger → Derived Holdings → Valuation/NAV → Performance & Risk → Public Reporting
 
+The transaction and cash ledgers are append-only. Trade posting is atomic: an approved IC decision, security transaction and corresponding cash movement are committed together by the database RPC `record_trade`. Corrections are represented by new reversal/adjustment entries rather than destructive edits.
+
 The transaction ledger is the source of truth for positions. Holdings are derived rather than manually overwritten. Trades require an approved IC decision. Decision and trade records are audit-controlled and are not destructively deleted.
 
 Research documents have controlled type, issue, version and publication-status metadata. Withdrawn documents remain in the record.

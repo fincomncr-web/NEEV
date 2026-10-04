@@ -35,11 +35,13 @@ export default async function Home() {
   ]);
   const active = holdings.filter((h) => h.status === "active");
   const quotes = active.length ? await getQuotes(active.map((h) => h.symbol)).catch(() => []) : [];
-  const { history, liveValue } = await getNavTimeline(holdings, quotes).catch(() => ({
+  const navTimeline = await getNavTimeline(holdings, quotes).catch(() => ({
     history: [],
     liveValue: 0,
+    cashBalance: null,
   }));
-  const breakdown = computeFundBreakdown(holdings, quotes);
+  const { history, liveValue, cashBalance } = navTimeline;
+  const breakdown = computeFundBreakdown(holdings, quotes, cashBalance ?? undefined);
   const returnPct = history.length > 1 ? totalReturnPct(liveValue) : null;
 
   return (

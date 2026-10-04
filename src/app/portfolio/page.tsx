@@ -21,8 +21,8 @@ export default async function PortfolioPage() {
   const quotes = activeHoldings.length
     ? await getQuotes(activeHoldings.map((h) => h.symbol)).catch(() => [])
     : [];
-  const { history, liveValue } = await getNavTimeline(holdings, quotes);
-  const breakdown = computeFundBreakdown(holdings, quotes);
+  const { history, liveValue, cashBalance } = await getNavTimeline(holdings, quotes);
+  const breakdown = computeFundBreakdown(holdings, quotes, cashBalance ?? undefined);
   const totalReturn = history.length > 1 ? totalReturnPct(liveValue) : null;
   const holdingsWithLive = withLiveMetrics(activeHoldings, quotes);
 

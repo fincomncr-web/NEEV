@@ -67,6 +67,7 @@ export interface Transaction {
   taxes: number;
   decisionId: string | null;
   status: string;
+  netCashFlow: number;
   reference: string | null;
   notes: string | null;
 }
@@ -161,8 +162,84 @@ export async function listTransactions(): Promise<Transaction[]> {
     transactionType: r.transaction_type, tradeDate: r.trade_date, settlementDate: r.settlement_date,
     quantity: Number(r.quantity), price: Number(r.price), grossAmount: Number(r.gross_amount),
     fees: Number(r.fees), taxes: Number(r.taxes), decisionId: r.decision_id, status: r.status,
+    netCashFlow:
+      r.transaction_type === "BUY"
+        ? -(Number(r.gross_amount) + Number(r.fees) + Number(r.taxes))
+        : Number(r.gross_amount) - Number(r.fees) - Number(r.taxes),
     reference: r.reference, notes: r.notes,
   }));
+}
+
+export type CashEntryType =
+  | "INITIAL_CAPITAL"
+  | "CONTRIBUTION"
+  | "WITHDRAWAL"
+  | "DIVIDEND"
+  | "EXPENSE"
+  | "FEE"
+  | "TAX"
+  | "CORPORATE_ACTION"
+  | "ADJUSTMENT";
+
+export interface CashLedgerEntry {
+  id: string;
+  entryDate: string;
+  entryType: CashEntryType;
+  amount: number;
+  transactionId: string | null;
+  reference: string | null;
+  notes: string | null;
+  status: string;
+}
+
+export async function listCashLedger(): Promise<CashLedgerEntry[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase
+    .from("cash_ledger")
+    .select("*")
+    .eq("status", "POSTED")
+    .order("entry_date", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (isMissingTable(error)) return [];
+  if (error) throw new Error(`Failed to list cash ledger: ${error.message}`);
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    entryDate: r.entry_date,
+    entryType: r.entry_type as CashEntryType,
+    amount: Number(r.amount),
+    transactionId: r.transaction_id,
+    reference: r.reference,
+    notes: r.notes,
+    status: r.status,
+  }));
+}
+
+export async function getCashBalance(): Promise<number | null> {
+  if (!isSupabaseConfigured) return null;
+  const { data, error } = await supabase.rpc("get_cash_balance");
+  if (isMissingTable(error)) return null;
+  if (error) throw new Error(`Failed to get cash balance: ${error.message}`);
+  return Number(data ?? 0);
+}
+
+export async function recordCashEntry(input: {
+  entryDate: string;
+  entryType: Exclude<CashEntryType, "BUY" | "SELL">;
+  amount: number;
+  reference?: string;
+  notes?: string;
+}): Promise<CashLedgerEntry> {
+  const { data, error } = await supabase.rpc("record_cash_entry", {
+    p_entry_date: input.entryDate,
+    p_entry_type: input.entryType,
+    p_amount: input.amount,
+    p_reference: input.reference ?? null,
+    p_notes: input.notes ?? null,
+  });
+  if (error) throw new Error(`Failed to record cash entry: ${error.message}`);
+  const entry = (await listCashLedger()).find((x) => x.id === String(data));
+  if (!entry) throw new Error("Cash entry was recorded but could not be reloaded.");
+  return entry;
 }
 
 export async function listHoldings(): Promise<Holding[]> {
@@ -287,7 +364,6 @@ export async function addDecision(input: Omit<Decision, "id">): Promise<Decision
   };
   const { data, error } = await supabase.from("decisions").insert(row).select().single();
   if (error) throw new Error(`Failed to save decision: ${error.message}`);
-  await supabase.from("audit_events").insert({ action: "CREATE", entity_type: "decision", entity_id: data.id, after_data: data });
   return (await listDecisions()).find((x) => x.id === data.id)!;
 }
 
@@ -322,7 +398,6 @@ export async function addInvestmentCase(input: Omit<InvestmentCase, "id">): Prom
   };
   const { data, error } = await supabase.from("investment_cases").insert(row).select().single();
   if (error) throw new Error(`Failed to create investment case: ${error.message}`);
-  await supabase.from("audit_events").insert({ action: "CREATE", entity_type: "investment_case", entity_id: data.id, after_data: data });
   return (await listInvestmentCases()).find((x) => x.id === data.id)!;
 }
 
