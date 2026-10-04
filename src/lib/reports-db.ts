@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { REPORTS_BUCKET, supabase } from "./supabase";
+import { isSupabaseConfigured, REPORTS_BUCKET, supabase } from "./supabase";
 
 export type ReportType =
   | "monthly_review"
@@ -83,6 +83,7 @@ function fromRow(row: ReportRow): IndustryReport {
 }
 
 export async function listReports(): Promise<IndustryReport[]> {
+  if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase
     .from("reports")
     .select("*")
@@ -130,6 +131,9 @@ function ensureBucket(): Promise<void> {
 export async function uploadReportFile(
   file: File
 ): Promise<{ fileName: string; fileUrl: string }> {
+  if (!isSupabaseConfigured) {
+    throw new Error("Supabase is not configured in this deployment.");
+  }
   await ensureBucket();
 
   const safeBase =
@@ -153,6 +157,9 @@ export async function uploadReportFile(
 export async function addReport(
   input: Omit<IndustryReport, "id" | "uploadedAt">
 ): Promise<IndustryReport> {
+  if (!isSupabaseConfigured) {
+    throw new Error("Supabase is not configured in this deployment.");
+  }
   const row = {
     id: randomUUID(),
     title: input.title,
@@ -177,6 +184,9 @@ export async function addReport(
 }
 
 export async function deleteReport(id:string):Promise<boolean>{
+  if (!isSupabaseConfigured) {
+    throw new Error("Supabase is not configured in this deployment.");
+  }
   const {data,error}=await supabase.from("reports").update({publication_status:"WITHDRAWN"}).eq("id",id).select("id").maybeSingle();
   if(error)throw new Error(`Failed to withdraw report: ${error.message}`);
   return !!data;
