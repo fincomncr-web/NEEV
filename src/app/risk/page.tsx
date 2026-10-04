@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getQuotes } from "@/lib/yahoo";
-import { listHoldings } from "@/lib/portfolio-db";
+import { getCashBalance, listHoldings } from "@/lib/portfolio-db";
 import { computeCharterStatus, computeFundBreakdown } from "@/lib/fund-engine";
 import { FUND_CONFIG } from "@/lib/sectors";
 import { formatPercent, formatCompact } from "@/lib/format";
@@ -22,10 +22,10 @@ function Status({ ok, label }: { ok: boolean; label: string }) {
 }
 
 export default async function RiskPage() {
-  const holdings = await listHoldings();
+  const [holdings, cashBalance] = await Promise.all([listHoldings(), getCashBalance()]);
   const active = holdings.filter((h) => h.status === "active");
   const quotes = active.length ? await getQuotes(active.map((h) => h.symbol)).catch(() => []) : [];
-  const breakdown = computeFundBreakdown(holdings, quotes);
+  const breakdown = computeFundBreakdown(holdings, quotes, cashBalance ?? undefined);
   const status = computeCharterStatus(breakdown);
 
   return (
