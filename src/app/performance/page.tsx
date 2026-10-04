@@ -5,6 +5,8 @@ import { FUND_CONFIG } from "@/lib/sectors";
 import { formatCompact, formatPercent } from "@/lib/format";
 import PerformanceChart from "@/components/portfolio/PerformanceChart";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Performance",
   description: "NEEV portfolio performance, methodology and risk statistics.",
