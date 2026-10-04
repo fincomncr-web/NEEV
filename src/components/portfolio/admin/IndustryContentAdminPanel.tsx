@@ -77,7 +77,7 @@ export default function IndustryContentAdminPanel({ passcode }: { passcode: stri
               <th className="px-2 py-2 font-medium text-muted">Sector</th>
               {LAYERS.map((l) => (
                 <th key={l.key} className="px-2 py-2 text-center font-medium text-muted">
-                  {l.month}
+                  {l.label}
                 </th>
               ))}
             </tr>
@@ -142,7 +142,7 @@ export default function IndustryContentAdminPanel({ passcode }: { passcode: stri
             >
               {LAYERS.map((l) => (
                 <option key={l.key} value={l.key}>
-                  {l.month} - {l.label}
+                  {l.label}
                 </option>
               ))}
             </select>
