@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   description: "NEEV portfolio overview, holdings, allocation and Investment Committee activity.",
 };
 export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 export default async function PortfolioPage() {
   const [holdings, decisions] = await Promise.all([listHoldings(), listDecisions()]);
