@@ -58,3 +58,5 @@ The application is deployed through Vercel from the main branch.
 ## Important status
 
 NEEV is an academic/student-managed initiative. It is not a SEBI-registered mutual fund, PMS, AIF, investment adviser or broker, and website content is not a solicitation or personalized investment advice.
+
+<!-- Vercel production deployment trigger -->
