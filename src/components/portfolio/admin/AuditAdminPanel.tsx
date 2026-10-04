@@ -17,7 +17,7 @@ function pretty(value: unknown) {
   return JSON.stringify(value, null, 2);
 }
 
-export default function AuditAdminPanel() {
+export default function AuditAdminPanel({ passcode }: { passcode: string }) {
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +26,7 @@ export default function AuditAdminPanel() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/portfolio/audit", { cache: "no-store" });
+      const res = await fetch("/api/portfolio/audit", { cache: "no-store", headers: { "x-neev-admin": passcode } });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Unable to load audit events.");
       setEvents(data.events ?? []);
