@@ -72,7 +72,8 @@ export default function Footer() {
               <li><Link href="/markets" className="inline-block transition-transform hover:translate-x-0.5 hover:text-accent">Live Markets</Link></li>
               <li><Link href="/search" className="inline-block transition-transform hover:translate-x-0.5 hover:text-accent">Company Search</Link></li>
               <li><Link href="/news" className="inline-block transition-transform hover:translate-x-0.5 hover:text-accent">Finance News</Link></li>
-              <li><Link href="/neev" className="inline-block transition-transform hover:translate-x-0.5 hover:text-accent">Neev by Finception</Link></li>
+              <li><Link href="/about" className="inline-block transition-transform hover:translate-x-0.5 hover:text-accent">Neev by Finception</Link></li>
+              <li><Link href="/portfolio/admin" className="inline-block transition-transform hover:translate-x-0.5 hover:text-accent">Core Committee Admin</Link></li>
             </ul>
           </div>
         </div>

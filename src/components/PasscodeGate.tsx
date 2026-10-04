@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 export default function PasscodeGate({
   eyebrow,
@@ -14,12 +14,28 @@ export default function PasscodeGate({
   onUnlock: (passcode: string) => void;
 }) {
   const [value, setValue] = useState("");
-  const [checking, setChecking] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/reports/verify", { cache: "no-store" })
+      .then(async (res) => {
+        if (alive && res.ok) onUnlock("");
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (alive) setChecking(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [onUnlock]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setChecking(true);
+    setSubmitting(true);
     setError(null);
     try {
       const res = await fetch("/api/reports/verify", {
@@ -32,38 +48,48 @@ export default function PasscodeGate({
         setError(data?.error ?? "Incorrect passcode.");
         return;
       }
-      onUnlock(value);
+      onUnlock("");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
-      setChecking(false);
+      setSubmitting(false);
     }
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col items-center px-4 py-24 text-center sm:px-6">
-      <p className="font-label text-[11px] text-accent">{eyebrow}</p>
-      <h1 className="mt-2 text-2xl font-bold tracking-tight">{title}</h1>
-      <p className="mt-3 text-sm text-muted">{description}</p>
-
-      <form onSubmit={handleSubmit} className="mt-6 w-full">
-        <input
-          type="password"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder="Passcode"
-          autoFocus
-          className="w-full rounded-md border border-border bg-surface px-4 py-2.5 text-center text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-        />
-        {error && <p className="mt-2 text-sm text-down">{error}</p>}
-        <button
-          type="submit"
-          disabled={checking || !value}
-          className="mt-4 w-full rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-[#070908] transition-opacity hover:opacity-90 disabled:opacity-60"
-        >
-          {checking ? "Checking..." : "Continue"}
-        </button>
-      </form>
+    <div className="mx-auto max-w-md px-4 py-20 sm:px-6">
+      <div className="card overflow-hidden">
+        <div className="border-b border-border bg-surface-2/50 p-6 text-center">
+          <p className="font-label text-[11px] text-accent">{eyebrow}</p>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight">{title}</h1>
+          <p className="mt-3 text-sm leading-6 text-muted">{description}</p>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6">
+          <label className="block text-sm font-medium text-foreground">
+            Admin passcode
+            <input
+              type="password"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder="Enter passcode"
+              autoFocus
+              disabled={checking || submitting}
+              className="mt-1.5 w-full rounded-md border border-border bg-surface px-4 py-2.5 text-center text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none disabled:opacity-60"
+            />
+          </label>
+          {error && <p className="mt-2 text-sm text-down">{error}</p>}
+          <button
+            type="submit"
+            disabled={checking || submitting || !value}
+            className="mt-4 w-full rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-[#070908] transition-opacity hover:opacity-90 disabled:opacity-60"
+          >
+            {checking ? "Checking session…" : submitting ? "Authenticating…" : "Enter control room"}
+          </button>
+          <p className="mt-4 text-center text-[11px] leading-5 text-muted">
+            Session expires automatically. Use “Lock admin” when leaving the console.
+          </p>
+        </form>
+      </div>
     </div>
   );
 }

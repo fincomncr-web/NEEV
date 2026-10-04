@@ -26,6 +26,7 @@ const NAV_GROUPS = [
     links: [
       { href: "/fund", label: "Fund Overview", icon: IconBuilding },
       { href: "/portfolio/charter", label: "Fund Charter", icon: IconShield },
+      { href: "/portfolio/admin", label: "Core Committee Admin", icon: IconShield },
     ],
   },
   {

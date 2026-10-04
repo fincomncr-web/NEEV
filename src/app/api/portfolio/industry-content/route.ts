@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { checkPasscode } from "@/lib/admin-auth";
+import { isAdminRequest } from "@/lib/admin-auth";
 import {
   listAllIndustryContent,
   listIndustryContent,
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
-  if (!checkPasscode(body?.passcode)) {
+  if (!isAdminRequest(req, body?.passcode)) {
     return NextResponse.json({ error: "Invalid upload passcode." }, { status: 401 });
   }
 

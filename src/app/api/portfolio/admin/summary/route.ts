@@ -1,0 +1,59 @@
+import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/admin-auth";
+import { getCashBalance, listDecisions, listHoldings, listInvestmentCases, listTransactions, listIndustryContent } from "@/lib/portfolio-db";
+import { isSupabaseConfigured } from "@/lib/supabase";
+import { listReports } from "@/lib/reports-db";
+
+export async function GET(req: NextRequest) {
+  if (!isAdminRequest(req)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+
+  try {
+    const [cashBalance, holdings, transactions, decisions, cases, reports, industryContent] = await Promise.all([
+      getCashBalance(),
+      listHoldings(),
+      listTransactions(),
+      listDecisions(),
+      listInvestmentCases(),
+      listReports(),
+      listIndustryContent("banking-financial-services").then(async (first) => {
+        const all = await listIndustryContent("automobile");
+        const rest = await Promise.all(["energy-infrastructure","fmcg","pharmaceuticals"].map((slug) => listIndustryContent(slug)));
+        return first.length + all.length + rest.reduce((n, rows) => n + rows.length, 0);
+      }),
+    ]);
+
+    const summary = {
+      cashBalance,
+      holdings: {
+        active: holdings.filter((h) => h.status === "active").length,
+        exited: holdings.filter((h) => h.status === "exited").length,
+      },
+      transactions: transactions.length,
+      decisions: {
+        total: decisions.length,
+        draft: decisions.filter((d) => d.status === "DRAFT").length,
+        approved: decisions.filter((d) => d.status === "APPROVED").length,
+      },
+      cases: {
+        total: cases.length,
+        draft: cases.filter((c) => c.status === "DRAFT" || c.status === "UNDER_REVIEW").length,
+        approved: cases.filter((c) => c.status === "APPROVED").length,
+      },
+      reports: {
+        total: reports.length,
+        published: reports.filter((r) => r.publicationStatus === "PUBLISHED").length,
+        inReview: reports.filter((r) => r.publicationStatus === "IN_REVIEW").length,
+      },
+      industryContent,
+      readiness: {
+        supabase: isSupabaseConfigured,
+        auth: !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        adminSession: !!process.env.REPORTS_UPLOAD_PASSCODE,
+      },
+    };
+
+    return NextResponse.json({ summary });
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to build admin summary." }, { status: 500 });
+  }
+}
