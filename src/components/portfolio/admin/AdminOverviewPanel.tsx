@@ -22,7 +22,7 @@ const KPI = [
   { key: "cases", label: "Investment cases", note: "Research → thesis bridge" },
 ] as const;
 
-export default function AdminOverviewPanel() {
+export default function AdminOverviewPanel({ passcode }: { passcode: string }) {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +31,7 @@ export default function AdminOverviewPanel() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/portfolio/admin/summary", { cache: "no-store" });
+      const res = await fetch("/api/portfolio/admin/summary", { cache: "no-store", headers: { "x-neev-admin": passcode } });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Unable to load admin summary.");
       setSummary(data.summary);
