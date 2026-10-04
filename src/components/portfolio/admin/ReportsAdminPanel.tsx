@@ -28,7 +28,7 @@ export default function ReportsAdminPanel({ passcode }: { passcode: string }) {
   async function load() {
     setLoading(true);
     try {
-      const res = await fetch("/api/reports", { cache: "no-store" });
+      const res = await fetch("/api/reports", { cache: "no-store", headers: { "x-neev-admin": passcode } });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Unable to load reports.");
       setReports(data.reports ?? []);
