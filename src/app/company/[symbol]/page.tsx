@@ -42,7 +42,7 @@ export default async function CompanyPage({
   const publishedDecisions = decisions
     .filter((d) => d.symbol?.toUpperCase() === symbol && d.status !== "DRAFT")
     .slice(0, 6);
-  const investmentCase = cases.find((c) => c.symbol.toUpperCase() === symbol && c.status !== "WITHDRAWN") ?? null;
+  const investmentCase = cases.find((c) => c.symbol.toUpperCase() === symbol && c.status === "APPROVED") ?? null;
   const name = position?.companyName ?? quote?.name ?? symbol;
 
   return (

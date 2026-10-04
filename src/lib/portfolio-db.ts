@@ -307,12 +307,12 @@ export async function postTransaction(input: {
 }
 
 export async function addHolding(
-  input: Omit<Holding, "id" | "status" | "exitDate" | "exitPrice" | "buyCash" | "sellCash"> & { decisionId: string }
+  input: Omit<Holding, "id" | "status" | "exitDate" | "exitPrice" | "buyCash" | "sellCash"> & { decisionId: string; fees?: number; taxes?: number }
 ): Promise<Holding> {
   await postTransaction({
     symbol: input.symbol, companyName: input.companyName, sector: input.sector,
     transactionType: "BUY", tradeDate: input.entryDate, quantity: input.quantity,
-    price: input.avgCost, decisionId: input.decisionId, notes: "Opening portfolio position.",
+    price: input.avgCost, fees: input.fees ?? 0, taxes: input.taxes ?? 0, decisionId: input.decisionId, notes: "Opening portfolio position.",
   });
   const holding = (await listHoldings()).find((x) => x.symbol === input.symbol && x.status === "active");
   if (!holding) throw new Error("Position was posted but could not be derived.");
@@ -320,7 +320,7 @@ export async function addHolding(
 }
 
 export async function exitHolding(
-  id: string, exitDate: string, exitPrice: number, decisionId: string, quantity?: number
+  id: string, exitDate: string, exitPrice: number, decisionId: string, quantity?: number, fees = 0, taxes = 0
 ): Promise<boolean> {
   const holding = (await listHoldings()).find((x) => x.id === id || x.symbol === id);
   if (!holding || holding.status !== "active") return false;
@@ -329,7 +329,7 @@ export async function exitHolding(
   await postTransaction({
     symbol: holding.symbol, companyName: holding.companyName, sector: holding.sector,
     transactionType: "SELL", tradeDate: exitDate, quantity: sellQuantity, price: exitPrice,
-    decisionId, notes: sellQuantity < holding.quantity ? "Partial exit." : "Full exit.",
+    decisionId, fees, taxes, notes: sellQuantity < holding.quantity ? "Partial exit." : "Full exit.",
   });
   return true;
 }

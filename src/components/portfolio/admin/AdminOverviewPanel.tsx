@@ -62,7 +62,7 @@ export default function AdminOverviewPanel() {
     { label: "Supabase", ok: summary.readiness.supabase, detail: "Database connection" },
     { label: "Admin session", ok: summary.readiness.adminSession, detail: "Server-side passcode session" },
     { label: "Member auth", ok: summary.readiness.auth, detail: "Supabase member sign-in" },
-    { label: "Ledger", ok: summary.transactions >= 0, detail: "Transaction ledger endpoint" },
+    { label: "Trade ledger", ok: summary.readiness.ledger, detail: "Database transaction tables" },
   ];
 
   return (

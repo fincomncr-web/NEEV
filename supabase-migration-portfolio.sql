@@ -240,6 +240,11 @@ begin
     if p_quantity > v_held + 0.000000001 then
       raise exception 'Sell quantity % exceeds available position % for %.', p_quantity, v_held, v_symbol;
     end if;
+  else
+    if (select coalesce(sum(amount), 0) from cash_ledger where status = 'POSTED')
+       < (p_quantity * p_price + coalesce(p_fees,0) + coalesce(p_taxes,0)) then
+      raise exception 'Insufficient cash to post BUY trade for %.', v_symbol;
+    end if;
   end if;
 
   insert into transactions (
@@ -281,6 +286,9 @@ begin
   if p_entry_date is null then raise exception 'Cash entry date is required.'; end if;
   if p_entry_type not in ('INITIAL_CAPITAL','CONTRIBUTION','WITHDRAWAL','DIVIDEND','EXPENSE','FEE','TAX','CORPORATE_ACTION','ADJUSTMENT') then
     raise exception 'Unsupported cash ledger entry type.';
+  end if;
+  if p_entry_type = 'INITIAL_CAPITAL' and exists (select 1 from cash_ledger where entry_type = 'INITIAL_CAPITAL') then
+    raise exception 'INITIAL_CAPITAL can only be recorded once.';
   end if;
   if p_amount is null or p_amount = 0 then raise exception 'Cash entry amount cannot be zero.'; end if;
   insert into cash_ledger(entry_date, entry_type, amount, reference, notes, created_by)

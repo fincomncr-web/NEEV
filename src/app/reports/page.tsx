@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function ReportsPage() {
   const reports = await listReports();
-  const libraryReports = reports.filter((report) => report.publicationStatus !== "WITHDRAWN").filter(
+  const libraryReports = reports.filter((report) => report.publicationStatus === "PUBLISHED").filter(
     (report) =>
       report.type !== "monthly_review" &&
       !(
