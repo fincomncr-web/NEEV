@@ -1,0 +1,27 @@
+"use client";
+import {useEffect,useState,type FormEvent} from "react";
+import type {Decision,Holding} from "@/lib/portfolio-db";
+import {SECTORS} from "@/lib/sectors";
+export default function HoldingsAdminPanel({passcode}:{passcode:string}){
+ const[holdings,setHoldings]=useState<Holding[]>([]),[decisions,setDecisions]=useState<Decision[]>([]),[loading,setLoading]=useState(true),[submitting,setSubmitting]=useState(false),[message,setMessage]=useState<string|null>(null),[exiting,setExiting]=useState<string|null>(null);
+ async function load(){setLoading(true);try{const[h,d]=await Promise.all([fetch("/api/portfolio/holdings"),fetch("/api/portfolio/decisions")]);const hd=await h.json(),dd=await d.json();setHoldings(hd.holdings??[]);setDecisions((dd.decisions??[]).filter((x:Decision)=>x.status==="APPROVED"));}finally{setLoading(false);}}
+ useEffect(()=>{queueMicrotask(load);},[]);
+ async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setSubmitting(true);setMessage(null);const f=new FormData(e.currentTarget);try{const r=await fetch("/api/portfolio/holdings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({passcode,...Object.fromEntries(f.entries())})});const d=await r.json();if(!r.ok){setMessage(d.error??"Failed to post position.");return;}setMessage("Trade posted to the controlled ledger.");e.currentTarget.reset();await load();}catch{setMessage("Failed to post position.");}finally{setSubmitting(false);}}
+ async function sell(h:Holding){const decisionId=prompt("Enter the approved IC decision ID for this sale:");if(!decisionId)return;const price=prompt("Exit price:");if(!price)return;const qty=prompt("Quantity to sell (leave blank for full exit):");const date=prompt("Trade date (YYYY-MM-DD):");if(!date)return;const r=await fetch("/api/portfolio/holdings",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({passcode,id:h.id,decisionId,exitPrice:price,quantity:qty||undefined,exitDate:date})});const d=await r.json();setMessage(r.ok?"Sell posted to the controlled ledger.":d.error??"Failed to post sell.");if(r.ok)await load();}
+ return <div>
+  <div className="mb-6 rounded-md border border-accent/30 bg-accent/5 p-4 text-sm text-muted"><span className="font-medium text-foreground">Transaction-controlled portfolio.</span> Positions are derived from the trade ledger. No manual delete or overwrite is permitted. Every trade must reference an approved IC decision.</div>
+  {message&&<div className="mb-6 rounded-md border border-border bg-surface p-4 text-sm text-muted">{message}</div>}
+  <form onSubmit={submit} className="card grid gap-4 p-6 sm:grid-cols-2">
+   <label className="text-sm">Symbol<input name="symbol" required placeholder="RELIANCE.NS" className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2"/></label>
+   <label className="text-sm">Company<input name="companyName" required className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2"/></label>
+   <label className="text-sm">Sector<select name="sector" required defaultValue="" className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2"><option value="" disabled>Select</option>{SECTORS.map(s=><option key={s.slug} value={s.name}>{s.name}</option>)}</select></label>
+   <label className="text-sm">Trade date<input name="entryDate" type="date" required className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2"/></label>
+   <label className="text-sm">Quantity<input name="quantity" type="number" min="0.000001" step="any" required className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2"/></label>
+   <label className="text-sm">Price<input name="avgCost" type="number" min="0.000001" step="any" required className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2"/></label>
+   <label className="sm:col-span-2 text-sm">Approved IC decision<select name="decisionId" required defaultValue="" className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2"><option value="" disabled>Select approved decision</option>{decisions.map(d=><option key={d.id} value={d.id}>{d.id.slice(0,8)} · {d.companyName??d.symbol??d.sector} · {d.decision} · {d.date}</option>)}</select></label>
+   <button disabled={submitting||!decisions.length} className="sm:col-span-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-[#070908] disabled:opacity-50">{submitting?"Posting…":"Post BUY Trade"}</button>
+   {!decisions.length&&<p className="sm:col-span-2 text-xs text-muted">No approved IC decisions exist. Create and approve the investment decision first.</p>}
+  </form>
+  <div className="mt-8"><h3 className="text-sm font-semibold">Current positions</h3>{loading?<p className="mt-3 text-sm text-muted">Loading…</p>:!holdings.filter(h=>h.status==="active").length?<p className="mt-3 text-sm text-muted">No active positions.</p>:<div className="mt-3 space-y-2">{holdings.filter(h=>h.status==="active").map(h=><div key={h.id} className="card flex items-center justify-between gap-4 p-4 text-sm"><div><p className="font-medium">{h.companyName} <span className="font-mono text-xs text-muted">{h.symbol}</span></p><p className="text-xs text-muted">{h.sector} · {h.quantity} shares · avg cost {h.avgCost.toFixed(2)}</p></div><button onClick={()=>{setExiting(h.id);void sell(h).finally(()=>setExiting(null));}} disabled={exiting===h.id} className="text-sm text-accent hover:underline">{exiting===h.id?"Posting…":"Sell / Partial Sell"}</button></div>)}</div>}</div>
+ </div>;
+}
