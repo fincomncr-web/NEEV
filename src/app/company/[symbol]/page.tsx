@@ -32,9 +32,13 @@ export default async function CompanyPage({
 
   const position = holdings.find((h) => h.status === "active" && h.symbol.toUpperCase() === symbol);
   const positionValue = position && quote?.price != null ? position.quantity * quote.price : null;
-  const positionPnl = positionValue != null && position.avgCost > 0
-    ? ((quote!.price! / position.avgCost) - 1) * 100
-    : null;
+  const positionPnl =
+    position &&
+    positionValue != null &&
+    quote?.price != null &&
+    position.avgCost > 0
+      ? ((quote.price / position.avgCost) - 1) * 100
+      : null;
   const publishedDecisions = decisions
     .filter((d) => d.symbol?.toUpperCase() === symbol && d.status !== "DRAFT")
     .slice(0, 6);
