@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { listDecisions } from "@/lib/portfolio-db";
 import DecisionRegisterList from "@/components/portfolio/DecisionRegisterList";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "IC Decision Register",
   description: "The published Investment Committee decision register for NEEV.",
