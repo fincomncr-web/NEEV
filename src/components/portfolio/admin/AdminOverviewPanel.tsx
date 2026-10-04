@@ -12,7 +12,7 @@ type Summary = {
   cases: { total: number; draft: number; approved: number };
   reports: { total: number; published: number; inReview: number };
   industryContent: number;
-  readiness: { supabase: boolean; auth: boolean; adminSession: boolean };
+  readiness: { supabase: boolean; auth: boolean; adminSession: boolean; ledger: boolean };
 };
 
 const KPI = [
