@@ -19,8 +19,8 @@ export default function HoldingsAdminPanel({ passcode }: { passcode: string }) {
     setLoading(true);
     try {
       const [h, d] = await Promise.all([
-        fetch("/api/portfolio/holdings", { cache: "no-store" }),
-        fetch("/api/portfolio/decisions", { cache: "no-store" }),
+        fetch("/api/portfolio/holdings", { cache: "no-store", headers: { "x-neev-admin": passcode } }),
+        fetch("/api/portfolio/decisions", { cache: "no-store", headers: { "x-neev-admin": passcode } }),
       ]);
       const [hd, dd] = await Promise.all([h.json(), d.json()]);
       setHoldings(hd.holdings ?? []);
