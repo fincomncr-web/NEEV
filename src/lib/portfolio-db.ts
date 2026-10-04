@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { supabase } from "./supabase";
+import { isSupabaseConfigured, supabase } from "./supabase";
 
 export interface NavEntry {
   id: string;
@@ -94,6 +94,7 @@ export interface IndustryContentEntry {
 }
 
 export async function listNavHistory(): Promise<NavEntry[]> {
+  if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase.from("nav_history").select("*").order("date", { ascending: true });
   if (error) throw new Error(`Failed to list NAV history: ${error.message}`);
   return (data ?? []).map((r) => ({
@@ -135,6 +136,7 @@ export async function addNavEntry(input: {
 }
 
 export async function listTransactions(): Promise<Transaction[]> {
+  if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase.from("transactions").select("*")
     .eq("status", "POSTED").order("trade_date", { ascending: false }).order("created_at", { ascending: false });
   if (error) {
@@ -254,6 +256,7 @@ export async function deleteHolding(_id: string): Promise<void> {
 }
 
 export async function listDecisions(): Promise<Decision[]> {
+  if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase.from("decisions").select("*")
     .order("date", { ascending: false }).order("created_at", { ascending: false });
   if (error) throw new Error(`Failed to list decisions: ${error.message}`);
@@ -287,6 +290,7 @@ export async function deleteDecision(_id: string): Promise<void> {
 }
 
 export async function listInvestmentCases(): Promise<InvestmentCase[]> {
+  if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase.from("investment_cases").select("*").order("updated_at", { ascending: false });
   if (error) throw new Error(`Failed to list investment cases: ${error.message}`);
   return (data ?? []).map((r) => ({
@@ -319,11 +323,13 @@ function mapIndustryContent(row: { sector_slug: string; layer: string; title: st
   return { sectorSlug: row.sector_slug, layer: row.layer, title: row.title, content: row.content, updatedAt: row.updated_at };
 }
 export async function listIndustryContent(sectorSlug: string): Promise<IndustryContentEntry[]> {
+  if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase.from("industry_content").select("*").eq("sector_slug", sectorSlug);
   if (error) throw new Error(`Failed to load industry content: ${error.message}`);
   return (data ?? []).map(mapIndustryContent);
 }
 export async function listAllIndustryContent(): Promise<IndustryContentEntry[]> {
+  if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase.from("industry_content").select("*");
   if (error) throw new Error(`Failed to list industry content: ${error.message}`);
   return (data ?? []).map(mapIndustryContent);
