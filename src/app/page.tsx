@@ -27,10 +27,18 @@ function Stat({ label, value, note }: { label: string; value: string; note?: str
 }
 
 export default async function Home() {
-  const [holdings, decisions] = await Promise.all([listHoldings(), listDecisions()]);
+  // Public dashboard rendering must not fail because an optional backend
+  // dependency (Supabase or market-data provider) is temporarily unavailable.
+  const [holdings, decisions] = await Promise.all([
+    listHoldings().catch(() => []),
+    listDecisions().catch(() => []),
+  ]);
   const active = holdings.filter((h) => h.status === "active");
   const quotes = active.length ? await getQuotes(active.map((h) => h.symbol)).catch(() => []) : [];
-  const { history, liveValue } = await getNavTimeline(holdings, quotes);
+  const { history, liveValue } = await getNavTimeline(holdings, quotes).catch(() => ({
+    history: [],
+    liveValue: 0,
+  }));
   const breakdown = computeFundBreakdown(holdings, quotes);
   const returnPct = history.length > 1 ? totalReturnPct(liveValue) : null;
 
