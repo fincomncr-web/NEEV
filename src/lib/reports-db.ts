@@ -89,7 +89,18 @@ export async function listReports(): Promise<IndustryReport[]> {
     .order("date", { ascending: false })
     .order("uploaded_at", { ascending: false });
 
-  if (error) throw new Error(`Failed to list reports: ${error.message}`);
+  if (error) {
+    // A fresh Supabase project may not have the reports table yet. Treat that
+    // as an empty library so Next.js/Vercel can build and the public site can
+    // still load. Once the table is created, reports are returned normally.
+    if (
+      error.code === "PGRST205" ||
+      error.message.includes("Could not find the table 'public.reports'")
+    ) {
+      return [];
+    }
+    throw new Error(`Failed to list reports: ${error.message}`);
+  }
   return (data as ReportRow[]).map(fromRow);
 }
 
