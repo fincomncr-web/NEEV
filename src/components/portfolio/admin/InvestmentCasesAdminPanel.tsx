@@ -24,8 +24,8 @@ export default function InvestmentCasesAdminPanel({ passcode }: { passcode: stri
     setLoading(true);
     try {
       const [casesRes, reportsRes] = await Promise.all([
-        fetch("/api/portfolio/cases", { cache: "no-store" }),
-        fetch("/api/reports", { cache: "no-store" }),
+        fetch("/api/portfolio/cases", { cache: "no-store", headers: { "x-neev-admin": passcode } }),
+        fetch("/api/reports", { cache: "no-store", headers: { "x-neev-admin": passcode } }),
       ]);
       const [casesData, reportsData] = await Promise.all([casesRes.json(), reportsRes.json()]);
       setCases(casesData.cases ?? []);
