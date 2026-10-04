@@ -12,7 +12,7 @@ export default function NavAdminPanel({ passcode }: { passcode: string }) {
   async function load() {
     setLoading(true);
     try {
-      const res = await fetch("/api/portfolio/nav");
+      const res = await fetch("/api/portfolio/nav", { headers: { "x-neev-admin": passcode } });
       const data = await res.json();
       setEntries((data.nav ?? []).slice().reverse());
     } finally {
