@@ -120,7 +120,12 @@ export default async function PortfolioPage() {
                   const weight = liveValue > 0 ? (h.currentValue / liveValue) * 100 : 0;
                   return (
                     <tr key={h.id}>
-                      <td className="px-4 py-3"><p className="font-medium">{h.companyName}</p><p className="font-mono text-xs text-muted">{h.symbol}</p></td>
+                      <td className="px-4 py-3">
+  <Link href={`/company/${encodeURIComponent(h.symbol)}`} className="block group">
+    <p className="font-medium group-hover:text-accent">{h.companyName}</p>
+    <p className="font-mono text-xs text-muted">{h.symbol}</p>
+  </Link>
+</td>
                       <td className="px-4 py-3 text-muted">{h.sector}</td>
                       <td className="px-4 py-3 text-right font-mono">{formatPercent(weight, false)}</td>
                       <td className="px-4 py-3 text-right font-mono">{formatPrice(h.avgCost)}</td>

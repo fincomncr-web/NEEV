@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import PriceChart from "@/components/finance/PriceChart";
 import QuoteCard from "@/components/finance/QuoteCard";
@@ -98,7 +99,15 @@ export default function CompanySearch() {
         <div className="card p-4">
           <div className="mb-3 flex items-center justify-between px-1">
             <h2 className="text-sm font-semibold text-foreground">{activeName}</h2>
-            <span className="font-mono text-xs text-muted">{symbol}</span>
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-xs text-muted">{symbol}</span>
+              <Link
+                href={`/company/${encodeURIComponent(symbol)}`}
+                className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-accent hover:border-accent"
+              >
+                Open terminal
+              </Link>
+            </div>
           </div>
           <QuoteCard symbol={symbol} />
         </div>

@@ -6,9 +6,11 @@ import NavAdminPanel from "@/components/portfolio/admin/NavAdminPanel";
 import HoldingsAdminPanel from "@/components/portfolio/admin/HoldingsAdminPanel";
 import DecisionsAdminPanel from "@/components/portfolio/admin/DecisionsAdminPanel";
 import IndustryContentAdminPanel from "@/components/portfolio/admin/IndustryContentAdminPanel";
+import CashAdminPanel from "@/components/portfolio/admin/CashAdminPanel";
 
 const TABS = [
   { key: "nav", label: "NAV" },
+  { key: "cash", label: "Cash Ledger" },
   { key: "holdings", label: "Holdings" },
   { key: "decisions", label: "Decisions" },
   { key: "content", label: "Industry Content" },
@@ -59,7 +61,7 @@ export default function PortfolioAdminPage() {
         ))}
       </div>
 
-      {tab === "nav" && <NavAdminPanel passcode={passcode} />}
+      {tab === "nav" && <NavAdminPanel passcode={passcode} />}\n      {tab === "cash" && <CashAdminPanel passcode={passcode} />}
       {tab === "holdings" && <HoldingsAdminPanel passcode={passcode} />}
       {tab === "decisions" && <DecisionsAdminPanel passcode={passcode} />}
       {tab === "content" && <IndustryContentAdminPanel passcode={passcode} />}
