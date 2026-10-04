@@ -29,7 +29,7 @@ export default function PasscodeGate({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setError(data?.error ?? "Incorrect passcode.");
+        setError(data?.error ?? "Unable to authenticate admin session.");
         return;
       }
       onUnlock(value);
