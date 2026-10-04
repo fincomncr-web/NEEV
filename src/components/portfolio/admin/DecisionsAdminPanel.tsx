@@ -15,8 +15,8 @@ export default function DecisionsAdminPanel({ passcode }: { passcode: string }) 
     setLoading(true);
     try {
       const [dRes, cRes] = await Promise.all([
-        fetch("/api/portfolio/decisions", { cache: "no-store" }),
-        fetch("/api/portfolio/cases", { cache: "no-store" }),
+        fetch("/api/portfolio/decisions", { cache: "no-store", headers: { "x-neev-admin": passcode } }),
+        fetch("/api/portfolio/cases", { cache: "no-store", headers: { "x-neev-admin": passcode } }),
       ]);
       const [d, c] = await Promise.all([dRes.json(), cRes.json()]);
       setDecisions(d.decisions ?? []);
