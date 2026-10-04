@@ -1,7 +1,30 @@
 -- Run this once in the Supabase SQL editor (Project -> SQL Editor -> New query).
 
--- Distinguish Industry Reports from Monthly Investment Reviews on the existing reports table.
+-- Research / disclosure document registry.
+-- Create it when bootstrapping a fresh Supabase project; retain existing rows
+-- when upgrading an existing project.
+create table if not exists reports (
+  id uuid primary key,
+  title text not null,
+  sector text not null,
+  summary text not null,
+  date date not null,
+  authors text not null,
+  file_name text not null,
+  file_url text not null,
+  file_size_bytes bigint not null default 0,
+  uploaded_at timestamptz not null default now(),
+  type text not null default 'industry_report',
+  issue_number integer,
+  version integer not null default 1,
+  publication_status text not null default 'IN_REVIEW',
+  data_cutoff date
+);
 alter table reports add column if not exists type text not null default 'industry_report';
+alter table reports add column if not exists issue_number integer;
+alter table reports add column if not exists version integer not null default 1;
+alter table reports add column if not exists publication_status text not null default 'IN_REVIEW';
+alter table reports add column if not exists data_cutoff date;
 
 -- Fund NAV history, logged periodically by the Portfolio Manager.
 create table if not exists nav_history (
