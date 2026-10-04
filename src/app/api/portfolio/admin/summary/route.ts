@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
-import { getCashBalance, listDecisions, listHoldings, listInvestmentCases, listTransactions, listIndustryContent } from "@/lib/portfolio-db";
+import { getCashBalance, listAllIndustryContent, listDecisions, listHoldings, listInvestmentCases, listTransactions } from "@/lib/portfolio-db";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { listReports } from "@/lib/reports-db";
 
@@ -15,11 +15,7 @@ export async function GET(req: NextRequest) {
       listDecisions(),
       listInvestmentCases(),
       listReports(),
-      listIndustryContent("banking-financial-services").then(async (first) => {
-        const all = await listIndustryContent("automobile");
-        const rest = await Promise.all(["energy-infrastructure","fmcg","pharmaceuticals"].map((slug) => listIndustryContent(slug)));
-        return first.length + all.length + rest.reduce((n, rows) => n + rows.length, 0);
-      }),
+      listAllIndustryContent(),
     ]);
 
     const summary = {
@@ -49,6 +45,7 @@ export async function GET(req: NextRequest) {
         supabase: isSupabaseConfigured,
         auth: !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
         adminSession: !!process.env.REPORTS_UPLOAD_PASSCODE,
+        ledger: isSupabaseConfigured,
       },
     };
 

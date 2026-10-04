@@ -3,7 +3,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { IndustryReport, ReportType } from "@/lib/reports-db";
 import { REPORT_SECTOR_OPTIONS } from "@/lib/sectors";
-import { formatCompact } from "@/lib/format";
 
 const TYPES: { value: ReportType; label: string }[] = [
   { value: "industry_report", label: "Industry Report" },
@@ -124,7 +123,7 @@ export default function ReportsAdminPanel({ passcode }: { passcode: string }) {
 
       <section className="mt-8">
         <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-semibold">Document register</h3><span className="text-xs text-muted">{reports.length} records</span></div>
-        {loading ? <p className="text-sm text-muted">Loading…</p> : !reports.length ? <p className="text-sm text-muted">No reports uploaded yet.</p> : <div className="space-y-3">{reports.map((r) => <div key={r.id} className="card p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><p className="font-medium">{r.title}</p><p className="mt-1 text-xs text-muted">{r.sector} · {r.type} · {r.date}</p></div><span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${r.publicationStatus === "PUBLISHED" ? "bg-up/10 text-up" : r.publicationStatus === "WITHDRAWN" ? "bg-down/10 text-down" : "bg-accent/10 text-accent"}`}>{r.publicationStatus}</span></div><p className="mt-2 text-sm leading-6 text-muted">{r.summary}</p><div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-muted"><span>{formatCompact(r.fileSizeBytes)} · v{r.version}{r.issueNumber ? ` · Issue #${r.issueNumber}` : ""}</span><div className="flex gap-3"><a href={r.fileUrl} target="_blank" rel="noreferrer noopener" className="text-accent hover:underline">View PDF</a>{r.publicationStatus !== "WITHDRAWN" && <button type="button" onClick={() => withdraw(r.id)} className="text-down hover:underline">Withdraw</button>}</div></div></div>)}</div>}
+        {loading ? <p className="text-sm text-muted">Loading…</p> : !reports.length ? <p className="text-sm text-muted">No reports uploaded yet.</p> : <div className="space-y-3">{reports.map((r) => <div key={r.id} className="card p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><p className="font-medium">{r.title}</p><p className="mt-1 text-xs text-muted">{r.sector} · {r.type} · {r.date}</p></div><span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${r.publicationStatus === "PUBLISHED" ? "bg-up/10 text-up" : r.publicationStatus === "WITHDRAWN" ? "bg-down/10 text-down" : "bg-accent/10 text-accent"}`}>{r.publicationStatus}</span></div><p className="mt-2 text-sm leading-6 text-muted">{r.summary}</p><div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-muted"><span>{(r.fileSizeBytes / 1024 / 1024).toFixed(1)} MB · v{r.version}{r.issueNumber ? ` · Issue #${r.issueNumber}` : ""}</span><div className="flex gap-3"><a href={r.fileUrl} target="_blank" rel="noreferrer noopener" className="text-accent hover:underline">View PDF</a>{r.publicationStatus !== "WITHDRAWN" && <button type="button" onClick={() => withdraw(r.id)} className="text-down hover:underline">Withdraw</button>}</div></div></div>)}</div>}
       </section>
     </div>
   );

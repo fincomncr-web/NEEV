@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import type { IndustryReport } from "@/lib/reports-db";
 import type { InvestmentCase } from "@/lib/portfolio-db";
 import { REPORT_SECTOR_OPTIONS, SECTORS } from "@/lib/sectors";
-import { formatCompact, formatPrice } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
 
 const STATUSES = ["DRAFT", "UNDER_REVIEW", "APPROVED", "ARCHIVED", "WITHDRAWN"];
 
