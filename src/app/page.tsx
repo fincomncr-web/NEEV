@@ -14,6 +14,7 @@ export const metadata: Metadata = {
     "NEEV is Finception's student-managed Indian equity investment initiative at Great Lakes Institute of Management, Gurgaon.",
 };
 export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 function Stat({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
