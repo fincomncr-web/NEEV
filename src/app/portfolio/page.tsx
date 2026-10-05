@@ -71,7 +71,7 @@ export default async function PortfolioPage() {
             <p className="font-label text-[10px] text-accent">PERFORMANCE</p>
             <h2 className="mt-1 text-xl font-semibold">NEEV valuation history</h2>
           </div>
-          <span className="text-xs text-muted">Nifty 500 TRI comparison withheld until a verified total-return series is connected</span>
+          <span className="text-xs text-muted">NEEV and Nifty 500 TRI rebased to 100 at the first common trading date</span>
         </div>
         <div className="mt-4">
           <PerformanceChart navHistory={history} benchmark={benchmark} />
