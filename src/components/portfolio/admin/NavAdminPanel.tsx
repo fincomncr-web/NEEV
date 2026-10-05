@@ -1,140 +1,157 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import type { NavEntry } from "@/lib/portfolio-db";
+import { formatCompact } from "@/lib/format";
+
+type CurrentNav = {
+  nav: number;
+  fundValue: number;
+  baseCapital: number;
+  cash: number;
+  holdingsValue: number;
+  activeNames: number;
+  quoteCoveragePct: number;
+  valuationStatus: "COMPLETE" | "INCOMPLETE";
+};
 
 export default function NavAdminPanel({ passcode }: { passcode: string }) {
-  const [entries, setEntries] = useState<NavEntry[]>([]);
+  const [current, setCurrent] = useState<CurrentNav | null>(null);
+  const [history, setHistory] = useState<NavEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
+    setError(null);
+
     try {
-      const res = await fetch("/api/portfolio/nav", { headers: { "x-neev-admin": passcode } });
+      const res = await fetch("/api/portfolio/nav", {
+        cache: "no-store",
+        headers: { "x-neev-admin": passcode },
+      });
       const data = await res.json();
-      setEntries((data.nav ?? []).slice().reverse());
+
+      if (!res.ok) throw new Error(data.error ?? "Unable to calculate NAV.");
+
+      setCurrent(data.current ?? null);
+      setHistory((data.history ?? []).slice().reverse());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to calculate NAV.");
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    queueMicrotask(() => load());
+    queueMicrotask(load);
   }, []);
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setSubmitting(true);
-    setMessage(null);
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-
-    try {
-      const res = await fetch("/api/portfolio/nav", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          passcode,
-          date: formData.get("date"),
-          nav: formData.get("nav"),
-          note: formData.get("note"),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setMessage({ type: "error", text: data.error ?? "Failed to save." });
-        return;
-      }
-      setMessage({ type: "success", text: "NAV entry saved." });
-      form.reset();
-      await load();
-    } catch {
-      setMessage({ type: "error", text: "Failed to save. Please try again." });
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   return (
-    <div>
-      <div className="mb-6 rounded-md border border-accent/30 bg-accent/5 p-4 text-sm text-muted">
-        <span className="font-medium text-foreground">Current NAV is now computed automatically</span>{" "}
-        from live holdings and market quotes - it updates the moment a position is added,
-        edited, or exited (see <code className="font-mono text-accent">src/lib/fund-engine.ts</code>).
-        Entries logged here fill in the historical trend line and are used only when no{" "}
-        <code className="font-mono text-accent">FUND_NAV_SHEET_CSV_URL</code> is configured.
+    <div className="space-y-8">
+      <div className="rounded-md border border-accent/30 bg-accent/5 p-5">
+        <p className="font-label text-[10px] text-accent">AUTOMATED NAV ENGINE</p>
+        <h2 className="mt-1 text-xl font-semibold">NAV is never entered manually</h2>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
+          The live NAV is derived from the current fund value. Base capital is the configured
+          ₹10 lakh starting capital:
+        </p>
+        <p className="mt-3 rounded-md border border-border bg-background px-4 py-3 font-mono text-sm text-foreground">
+          NAV = Current Fund Value ÷ ₹10,00,000
+        </p>
       </div>
-      {message && (
-        <div
-          className={`mb-6 rounded-md border px-4 py-3 text-sm ${
-            message.type === "error"
-              ? "border-down/30 bg-down/5 text-down"
-              : "border-up/30 bg-up/5 text-up"
-          }`}
-        >
-          {message.text}
+
+      {error && (
+        <div className="rounded-md border border-down/30 bg-down/5 p-4 text-sm text-down">
+          {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="card grid gap-4 p-6 sm:grid-cols-3">
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">Date</label>
-          <input
-            type="date"
-            name="date"
-            required
-            className="w-full rounded-md border border-border bg-surface px-4 py-2.5 text-sm text-foreground focus:border-accent focus:outline-none"
-          />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">NAV Value</label>
-          <input
-            type="number"
-            name="nav"
-            step="any"
-            required
-            placeholder="e.g. 1023450"
-            className="w-full rounded-md border border-border bg-surface px-4 py-2.5 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-          />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">Note (optional)</label>
-          <input
-            type="text"
-            name="note"
-            placeholder="e.g. Post-rebalance"
-            className="w-full rounded-md border border-border bg-surface px-4 py-2.5 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={submitting}
-          className="sm:col-span-3 mt-1 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-[#070908] transition-opacity hover:opacity-90 disabled:opacity-60"
-        >
-          {submitting ? "Saving..." : "Save NAV Entry"}
-        </button>
-      </form>
+      {loading ? (
+        <p className="text-sm text-muted">Calculating current NAV…</p>
+      ) : current ? (
+        <>
+          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="card p-5">
+              <p className="text-xs text-muted">Current NAV</p>
+              <p className="mt-2 text-3xl font-bold tracking-tight">{current.nav.toFixed(4)}</p>
+              <p className="mt-1 text-xs text-muted">1.0000 at ₹10 lakh base</p>
+            </div>
+            <div className="card p-5">
+              <p className="text-xs text-muted">Current fund value</p>
+              <p className="mt-2 text-2xl font-bold">{formatCompact(current.fundValue)}</p>
+              <p className="mt-1 text-xs text-muted">Live equity + cash</p>
+            </div>
+            <div className="card p-5">
+              <p className="text-xs text-muted">Cash</p>
+              <p className="mt-2 text-2xl font-bold">{formatCompact(current.cash)}</p>
+              <p className="mt-1 text-xs text-muted">From controlled cash ledger</p>
+            </div>
+            <div className="card p-5">
+              <p className="text-xs text-muted">Valuation coverage</p>
+              <p className="mt-2 text-2xl font-bold">{current.quoteCoveragePct.toFixed(1)}%</p>
+              <p className="mt-1 text-xs text-muted">{current.valuationStatus === "COMPLETE" ? "All active positions quoted" : "Some positions use cost fallback"}</p>
+            </div>
+          </section>
 
-      <div className="mt-8">
-        <h3 className="text-sm font-semibold text-foreground">Logged NAV History</h3>
-        {loading ? (
-          <p className="mt-3 text-sm text-muted">Loading...</p>
-        ) : entries.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">No NAV entries yet.</p>
+          <section className="card p-6">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="font-label text-[10px] text-accent">LIVE COMPOSITION</p>
+                <h3 className="mt-1 text-lg font-semibold">What drives today's NAV</h3>
+              </div>
+              <button
+                type="button"
+                onClick={load}
+                className="rounded-md border border-border px-3 py-2 text-xs text-muted hover:border-accent hover:text-foreground"
+              >
+                Refresh
+              </button>
+            </div>
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-md border border-border bg-surface-2/40 p-4">
+                <p className="text-xs text-muted">Base capital</p>
+                <p className="mt-1 font-mono text-sm">{formatCompact(current.baseCapital)}</p>
+              </div>
+              <div className="rounded-md border border-border bg-surface-2/40 p-4">
+                <p className="text-xs text-muted">Equity / holdings</p>
+                <p className="mt-1 font-mono text-sm">{formatCompact(current.holdingsValue)}</p>
+              </div>
+              <div className="rounded-md border border-border bg-surface-2/40 p-4">
+                <p className="text-xs text-muted">Active holdings</p>
+                <p className="mt-1 font-mono text-sm">{current.activeNames}</p>
+              </div>
+            </div>
+          </section>
+        </>
+      ) : null}
+
+      <section>
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <p className="font-label text-[10px] text-accent">HISTORY</p>
+            <h3 className="mt-1 text-sm font-semibold">Legacy valuation history</h3>
+          </div>
+          <span className="text-xs text-muted">Read-only</span>
+        </div>
+        {history.length === 0 ? (
+          <p className="text-sm text-muted">
+            No legacy manual valuation entries exist. Future NAV history will come from the automated
+            snapshot process rather than manual entry.
+          </p>
         ) : (
-          <div className="mt-3 space-y-2">
-            {entries.map((e) => (
-              <div key={e.id} className="card flex items-center justify-between px-4 py-3 text-sm">
-                <span className="font-mono text-xs text-muted">{e.date}</span>
-                <span className="font-mono text-foreground">{e.nav.toLocaleString("en-IN")}</span>
-                {e.note && <span className="text-xs text-muted">{e.note}</span>}
+          <div className="space-y-2">
+            {history.map((entry) => (
+              <div key={entry.id} className="card flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
+                <span className="font-mono text-xs text-muted">{entry.date}</span>
+                <span className="font-mono">{formatCompact(entry.nav)}</span>
+                {entry.note && <span className="text-xs text-muted">{entry.note}</span>}
               </div>
             ))}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }
