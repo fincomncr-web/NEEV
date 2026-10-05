@@ -10,7 +10,6 @@ export default function ResearchSectorView({
 }: {
   reports: IndustryReport[];
 }) {
-  const MAX_SECTOR_REPORTS = 2;
   const [selectedSector, setSelectedSector] = useState(SECTORS[0]?.slug ?? "");
 
   const selected = SECTORS.find((sector) => sector.slug === selectedSector) ?? SECTORS[0];
@@ -18,7 +17,7 @@ export default function ResearchSectorView({
     () =>
       reports.filter(
         (report) =>
-          report.type === "monthly_review" &&
+          (report.type === "monthly_review" || report.type === "industry_report") &&
           report.publicationStatus === "PUBLISHED" &&
           report.sector.trim().toLowerCase() === selected?.name.trim().toLowerCase()
       )
