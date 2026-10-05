@@ -141,6 +141,55 @@ export async function addNavEntry(input: {
   };
 }
 
+
+export async function recordNavSnapshot(input: {
+  date: string;
+  fundValue: number;
+  unitNav: number;
+  cash: number;
+  valuationStatus: string;
+  priceCoveragePct: number;
+}): Promise<NavEntry> {
+  if (!isSupabaseConfigured) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const row = {
+    id: randomUUID(),
+    date: input.date,
+    nav: input.fundValue,
+    unit_nav: input.unitNav,
+    total_assets: input.fundValue,
+    cash: input.cash,
+    liabilities: 0,
+    valuation_status: input.valuationStatus,
+    price_coverage_pct: input.priceCoveragePct,
+    note: "Automated daily NAV snapshot.",
+  };
+
+  const { data, error } = await supabase
+    .from("nav_history")
+    .upsert(row, { onConflict: "date" })
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to save NAV snapshot: ${error.message}`);
+  }
+
+  return {
+    id: data.id,
+    date: data.date,
+    nav: Number(data.nav),
+    note: data.note,
+    unitNav: data.unit_nav == null ? null : Number(data.unit_nav),
+    totalAssets: data.total_assets == null ? null : Number(data.total_assets),
+    cash: data.cash == null ? null : Number(data.cash),
+    liabilities: data.liabilities == null ? null : Number(data.liabilities),
+    valuationStatus: data.valuation_status,
+    priceCoveragePct: data.price_coverage_pct == null ? null : Number(data.price_coverage_pct),
+  };
+}
 export async function listTransactions(): Promise<Transaction[]> {
   if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase.from("transactions").select("*")
