@@ -6,6 +6,7 @@ import { computePerformanceStats } from "@/lib/performance";
 import { FUND_CONFIG } from "@/lib/sectors";
 import { formatCompact, formatPercent } from "@/lib/format";
 import PerformanceChart from "@/components/portfolio/PerformanceChart";
+import { getNifty500TriHistory } from "@/lib/nifty-indices";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,7 @@ export default async function PerformancePage() {
 
   const navTimeline = await getNavTimeline(holdings, quotes);
   const { history, liveValue, liveNav } = navTimeline;
+  const benchmark = await getNifty500TriHistory(history[0]?.date);
   const stats = computePerformanceStats(
     history.map((x) => ({ date: x.date, value: x.nav }))
   );
@@ -80,18 +82,17 @@ export default async function PerformancePage() {
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="font-label text-[10px] text-accent">NAV PERFORMANCE</p>
-            <h2 className="mt-1 text-xl font-semibold">NEEV return since base NAV</h2>
+            <h2 className="mt-1 text-xl font-semibold">NEEV vs Nifty 500 TRI</h2>
           </div>
-          <span className="font-mono text-xs text-muted">1.0000 NAV = 0.00% return</span>
+          <span className="font-mono text-xs text-muted">Both series rebased to 100 at the comparison start</span>
         </div>
 
-        <PerformanceChart navHistory={history} benchmark={[]} />
+        <PerformanceChart navHistory={history} benchmark={benchmark} />
 
         <p className="mt-3 text-xs leading-5 text-muted">
-          The chart plots cumulative return derived directly from NAV:
-          <span className="font-mono text-foreground"> (NAV − 1.0000) × 100</span>.
-          Daily NAV snapshots are generated automatically after market close; the latest live NAV
-          is shown immediately.
+          The line chart uses daily NEEV NAV observations and the official Nifty 500 Total Return
+          Index. Both series are independently rebased to 100 on the first common trading date, so
+          the distance between the lines represents relative cumulative performance.
         </p>
       </section>
 
@@ -101,8 +102,8 @@ export default async function PerformancePage() {
           <p className="mt-2 text-sm leading-6 text-muted">
             Governing benchmark:{" "}
             <span className="font-medium text-foreground">{FUND_CONFIG.benchmarkName}</span>.
-            Benchmark-relative performance will be added once a verified total-return series is
-            connected.
+            The chart now uses daily Nifty 500 TRI observations from NSE Indices when the source is
+            available. The benchmark is never substituted with the price index.
           </p>
         </div>
 
