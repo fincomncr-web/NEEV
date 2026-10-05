@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/nav-snapshot",
+      "schedule": "0 13 * * 1-5"
+    }
+  ]
+}
