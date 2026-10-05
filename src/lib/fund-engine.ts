@@ -28,6 +28,10 @@ export interface HoldingWithLive extends Holding{ltp:number|null;currentValue:nu
 export function withLiveMetrics(holdings:Holding[],quotes:QuoteData[]):HoldingWithLive[]{
   return holdings.map(h=>{const q=quoteFor(h.symbol,quotes);const ltp=q?.price??null;const costValue=h.avgCost*h.quantity;return{...h,ltp,currentValue:ltp!==null?ltp*h.quantity:costValue,costValue,pnlPct:ltp!==null&&h.avgCost>0?(ltp/h.avgCost-1)*100:null,quoteAvailable:ltp!==null,priceAsOf:q?.asOf??null,valuationBasis:ltp!==null?"MARKET":"COST_FALLBACK"};});
 }
+export function computeFundNav(currentValue: number, baseCapital = FUND_CONFIG.notionalAum): number {
+  return baseCapital > 0 ? currentValue / baseCapital : 0;
+}
+
 export function totalReturnPct(currentValue:number){return((currentValue-FUND_CONFIG.notionalAum)/FUND_CONFIG.notionalAum)*100;}
 
 export interface FundBreakdown{totalValue:number;cash:number;holdingsValue:number;cashPct:number;activeNames:number;maxSingleStockPct:number;maxSingleStockSymbol:string|null;maxSectorPct:number;maxSector:string|null;bySector:{sector:string;value:number;weightPct:number}[];missingQuoteSymbols:string[];quoteCoveragePct:number;valuationStatus:"COMPLETE"|"INCOMPLETE";}
