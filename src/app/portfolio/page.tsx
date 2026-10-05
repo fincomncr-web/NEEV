@@ -7,6 +7,7 @@ import { computeFundBreakdown, totalReturnPct, withLiveMetrics } from "@/lib/fun
 import { FUND_CONFIG, SECTORS } from "@/lib/sectors";
 import { formatCompact, formatPercent, formatPrice, formatSigned } from "@/lib/format";
 import PerformanceChart from "@/components/portfolio/PerformanceChart";
+import { getNifty500TriHistory } from "@/lib/nifty-indices";
 
 export const metadata: Metadata = {
   title: "Portfolio",
@@ -23,7 +24,8 @@ export default async function PortfolioPage() {
     : [];
   const { history, liveValue, liveNav, cashBalance } = await getNavTimeline(holdings, quotes);
   const breakdown = computeFundBreakdown(holdings, quotes, cashBalance ?? undefined);
-  const totalReturn = history.length > 1 ? totalReturnPct(liveValue) : null;
+  const benchmark = await getNifty500TriHistory(history[0]?.date);
+  const totalReturn = (liveNav - 1) * 100;
   const holdingsWithLive = withLiveMetrics(activeHoldings, quotes);
 
   return (
@@ -72,7 +74,7 @@ export default async function PortfolioPage() {
           <span className="text-xs text-muted">Nifty 500 TRI comparison withheld until a verified total-return series is connected</span>
         </div>
         <div className="mt-4">
-          <PerformanceChart navHistory={history} benchmark={[]} />
+          <PerformanceChart navHistory={history} benchmark={benchmark} />
         </div>
       </section>
 
@@ -90,7 +92,7 @@ export default async function PortfolioPage() {
             return (
               <Link key={sector.slug} href="/industries" className="card p-5 hover:border-accent">
                 <p className="text-sm font-medium text-foreground">{sector.name}</p>
-                <p className="mt-3 text-2xl font-bold">{item ? formatPercent(item.weightPct) : "0.0%"}</p>
+                <p className="mt-3 text-2xl font-bold">{item ? formatPercent(item.weightPct, false) : "0.0%"}</p>
               </Link>
             );
           })}
