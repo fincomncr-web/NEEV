@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
       type,
       issueNumber: formData.get("issueNumber") ? Number(formData.get("issueNumber")) : null,
       version: formData.get("version") ? Number(formData.get("version")) : 1,
-      publicationStatus: (String(formData.get("publicationStatus") ?? "IN_REVIEW")) as "DRAFT" | "IN_REVIEW" | "PUBLISHED" | "SUPERSEDED" | "WITHDRAWN",
+      publicationStatus: (String(formData.get("publicationStatus") ?? "PUBLISHED")) as "DRAFT" | "IN_REVIEW" | "PUBLISHED" | "SUPERSEDED" | "WITHDRAWN",
       dataCutoff: formData.get("dataCutoff") ? String(formData.get("dataCutoff")) : null,
     });
     return NextResponse.json({ report }, { status: 201 });
