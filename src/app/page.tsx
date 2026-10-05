@@ -38,6 +38,9 @@ export default async function Home() {
   const navTimeline = await getNavTimeline(holdings, quotes).catch(() => ({
     history: [],
     liveValue: 0,
+    liveNav: 0,
+    source: "computed" as const,
+    authoritative: true,
     cashBalance: null,
   }));
   const { history, liveValue, liveNav, cashBalance } = navTimeline;
