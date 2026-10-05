@@ -241,6 +241,22 @@ export interface CashLedgerEntry {
   status: string;
 }
 
+export async function getInceptionDate(): Promise<string | null> {
+  if (!isSupabaseConfigured) return null;
+  const { data, error } = await supabase
+    .from("cash_ledger")
+    .select("entry_date")
+    .eq("entry_type", "INITIAL_CAPITAL")
+    .order("entry_date", { ascending: true })
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (isMissingTable(error)) return null;
+  if (error) throw new Error(`Failed to get fund inception date: ${error.message}`);
+  return data?.entry_date ?? null;
+}
+
 export async function listCashLedger(): Promise<CashLedgerEntry[]> {
   if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase
