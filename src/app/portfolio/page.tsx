@@ -49,7 +49,7 @@ export default async function PortfolioPage() {
           ["Current NAV", liveNav.toFixed(4)],
           ["Since inception", formatPercent(totalReturn, false)],
           ["Equity value", formatCompact(breakdown.holdingsValue)],
-          ["Cash", formatPercent(breakdown.cashPct, false)],
+          ["Cash", formatPercent(breakdown.cashPct, false).replace("+", "")],
           ["Holdings", String(breakdown.activeNames)],
         ].map(([label, value]) => (
           <div key={label} className="card p-5">
@@ -92,7 +92,7 @@ export default async function PortfolioPage() {
             return (
               <Link key={sector.slug} href="/industries" className="card p-5 hover:border-accent">
                 <p className="text-sm font-medium text-foreground">{sector.name}</p>
-                <p className="mt-3 text-2xl font-bold">{item ? formatPercent(item.weightPct, false) : "0.0%"}</p>
+                <p className="mt-3 text-2xl font-bold">{item ? formatPercent(item.weightPct, false).replace("+", "") : "0.0%"}</p>
               </Link>
             );
           })}
@@ -130,7 +130,7 @@ export default async function PortfolioPage() {
   </Link>
 </td>
                       <td className="px-4 py-3 text-muted">{h.sector}</td>
-                      <td className="px-4 py-3 text-right font-mono">{formatPercent(weight, false)}</td>
+                      <td className="px-4 py-3 text-right font-mono">{formatPercent(weight, false).replace("+", "")}</td>
                       <td className="px-4 py-3 text-right font-mono">{formatPrice(h.avgCost)}</td>
                       <td className="px-4 py-3 text-right font-mono">{h.ltp !== null ? formatPrice(h.ltp) : "Unavailable"}</td>
                       <td className={`px-4 py-3 text-right font-mono ${h.pnlPct === null ? "text-muted" : h.pnlPct >= 0 ? "text-up" : "text-down"}`}>
