@@ -1,36 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
 import { isAdminRequest } from "@/lib/admin-auth";
-import { addNavEntry, listNavHistory } from "@/lib/portfolio-db";
+import { getCashBalance, listHoldings, listNavHistory } from "@/lib/portfolio-db";
+import { getQuotes } from "@/lib/yahoo";
+import { computeFundBreakdown, computeFundNav, computeFundValue } from "@/lib/fund-engine";
+import { FUND_CONFIG } from "@/lib/sectors";
 
-export async function GET() {
-  const nav = await listNavHistory();
-  return NextResponse.json({ nav });
-}
-
-export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => null);
-  if (!isAdminRequest(req, body?.passcode)) {
-    return NextResponse.json({ error: "Invalid upload passcode." }, { status: 401 });
-  }
-
-  const date = String(body?.date ?? "").trim();
-  const navValue = Number(body?.nav);
-  const note = body?.note ? String(body.note).trim() : undefined;
-
-  if (!date || !Number.isFinite(navValue) || navValue <= 0) {
-    return NextResponse.json({ error: "A valid date and NAV value are required." }, { status: 400 });
+export async function GET(req: NextRequest) {
+  if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
   try {
-    const entry = await addNavEntry({ date, nav: navValue, note });
-    revalidatePath("/");
-    revalidatePath("/portfolio");
-    return NextResponse.json({ entry }, { status: 201 });
+    const holdings = await listHoldings();
+    const active = holdings.filter((h) => h.status === "active");
+    const quotes = active.length
+      ? await getQuotes(active.map((h) => h.symbol)).catch(() => [])
+      : [];
+    const cashBalance = await getCashBalance();
+    const currentValue = computeFundValue(holdings, quotes, cashBalance ?? undefined);
+    const currentNav = computeFundNav(currentValue);
+    const breakdown = computeFundBreakdown(holdings, quotes, cashBalance ?? undefined);
+    const history = await listNavHistory();
+
+    return NextResponse.json({
+      current: {
+        nav: currentNav,
+        fundValue: currentValue,
+        baseCapital: FUND_CONFIG.notionalAum,
+        cash: breakdown.cash,
+        holdingsValue: breakdown.holdingsValue,
+        activeNames: breakdown.activeNames,
+        quoteCoveragePct: breakdown.quoteCoveragePct,
+        valuationStatus: breakdown.valuationStatus,
+      },
+      history,
+    });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to save NAV entry." },
+      { error: err instanceof Error ? err.message : "Unable to calculate NAV." },
       { status: 500 }
     );
   }
+}
+
+export async function POST(req: NextRequest) {
+  if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  return NextResponse.json(
+    { error: "NAV is calculated automatically. Manual NAV entries are disabled." },
+    { status: 405 }
+  );
 }
