@@ -52,7 +52,7 @@ export default function PerformanceChart({ navHistory, benchmark = [] }: Props) 
         .sort((a, b) => a.date.localeCompare(b.date))
         .map((n) => ({
           time: Math.floor(new Date(n.date).getTime() / 1000) as UTCTimestamp,
-          value: n.nav,
+          value: (n.nav - 1) * 100,
         }))
     );
 
@@ -67,13 +67,14 @@ export default function PerformanceChart({ navHistory, benchmark = [] }: Props) 
         },
       });
 
+      const benchmarkBase = benchmark[0]?.close ?? 0;
       benchmarkSeries.setData(
         benchmark
           .slice()
           .sort((a, b) => a.time.localeCompare(b.time))
           .map((b) => ({
             time: Math.floor(new Date(b.time).getTime() / 1000) as UTCTimestamp,
-            value: b.close,
+            value: benchmarkBase > 0 ? (b.close / benchmarkBase - 1) * 100 : 0,
           }))
       );
     }
