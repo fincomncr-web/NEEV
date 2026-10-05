@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { getCashBalance, listHoldings, listNavHistory } from "@/lib/portfolio-db";
+import { getNavTimeline } from "@/lib/google-sheet-nav";
+import { listHoldings } from "@/lib/portfolio-db";
 import { getQuotes } from "@/lib/yahoo";
-import { computeFundNav, computeFundValue } from "@/lib/fund-engine";
 import { computePerformanceStats } from "@/lib/performance";
 import { FUND_CONFIG } from "@/lib/sectors";
 import { formatCompact, formatPercent } from "@/lib/format";
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Performance",
-  description: "NEEV portfolio performance, methodology and risk statistics.",
+  description: "NEEV portfolio performance, NAV returns and risk statistics.",
 };
 export const revalidate = 0;
 
@@ -26,57 +26,92 @@ function Metric({ label, value, note }: { label: string; value: string; note?: s
 }
 
 export default async function PerformancePage() {
-  const history = await listNavHistory();
   const holdings = await listHoldings();
   const active = holdings.filter((h) => h.status === "active");
-  const quotes = active.length ? await getQuotes(active.map((h) => h.symbol)).catch(() => []) : [];
-  const cashBalance = await getCashBalance();
-  const currentValue = computeFundValue(holdings, quotes, cashBalance ?? undefined);
-  const currentNav = computeFundNav(currentValue);
-  const stats = computePerformanceStats(history.map((x) => ({ date: x.date, value: x.nav })));
+  const quotes = active.length
+    ? await getQuotes(active.map((h) => h.symbol)).catch(() => [])
+    : [];
+
+  const navTimeline = await getNavTimeline(holdings, quotes);
+  const { history, liveValue, liveNav } = navTimeline;
+  const stats = computePerformanceStats(
+    history.map((x) => ({ date: x.date, value: x.nav }))
+  );
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <header className="mb-8">
         <p className="font-label text-[11px] text-accent">PORTFOLIO</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Performance</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
-          Performance is shown from the available NEEV valuation history. Benchmark-relative
-          statistics will be published once a verified Nifty 500 TRI data series is connected.
+        <p className="mt-3 max-w-3xl text-muted">
+          NEEV performance is measured from NAV. Base NAV is 1.0000 at the ₹10 lakh starting
+          capital, so a NAV of 1.1200 represents a +12.00% return.
         </p>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric label="Current NAV" value={currentNav.toFixed(4)} note="Current fund value ÷ ₹10 lakh base" />
-        <Metric label="Current fund value" value={formatCompact(currentValue)} note="Live equity + cash" />
-        <Metric label="Total return" value={formatPercent((currentNav - 1) * 100, false)} note="From the ₹10 lakh base" />
-        <Metric label="Annualized return" value={stats.annualizedReturnPct === null ? "Building history" : formatPercent(stats.annualizedReturnPct, false)} />
-        <Metric label="Maximum drawdown" value={stats.maxDrawdownPct === null ? "Building history" : formatPercent(stats.maxDrawdownPct, false)} /><Metric label="Annualized volatility" value={stats.annualizedVolatilityPct === null ? "Not available" : formatPercent(stats.annualizedVolatilityPct, false)} note={stats.frequency ? `Calculated from ${stats.frequency} observations` : undefined} />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <Metric
+          label="Current NAV"
+          value={liveNav.toFixed(4)}
+          note="Current fund value ÷ ₹10 lakh base"
+        />
+        <Metric
+          label="Current fund value"
+          value={formatCompact(liveValue)}
+          note="Live equity + cash"
+        />
+        <Metric
+          label="NAV return"
+          value={formatPercent((liveNav - 1) * 100, false)}
+          note="Since ₹10 lakh base"
+        />
+        <Metric
+          label="Maximum drawdown"
+          value={stats.maxDrawdownPct === null ? "Building history" : formatPercent(stats.maxDrawdownPct, false)}
+        />
+        <Metric
+          label="Annualized volatility"
+          value={stats.annualizedVolatilityPct === null ? "Building history" : formatPercent(stats.annualizedVolatilityPct, false)}
+          note={stats.frequency ? `Calculated from ${stats.frequency} NAV observations` : "Requires NAV history"}
+        />
       </div>
 
       <section className="mt-8 card p-5">
-        <div className="mb-4">
-          <h2 className="text-sm font-semibold">NEEV performance history</h2>
-          <p className="mt-1 text-xs text-muted">{stats.observations} recorded legacy observations · current NAV is calculated live</p>
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="font-label text-[10px] text-accent">NAV PERFORMANCE</p>
+            <h2 className="mt-1 text-xl font-semibold">NEEV return since base NAV</h2>
+          </div>
+          <span className="font-mono text-xs text-muted">1.0000 NAV = 0.00% return</span>
         </div>
+
         <PerformanceChart navHistory={history} benchmark={[]} />
+
+        <p className="mt-3 text-xs leading-5 text-muted">
+          The chart plots cumulative return derived directly from NAV:
+          <span className="font-mono text-foreground"> (NAV − 1.0000) × 100</span>.
+          Daily NAV snapshots are generated automatically after market close; the latest live NAV
+          is shown immediately.
+        </p>
       </section>
 
       <section className="mt-8 grid gap-6 lg:grid-cols-2">
         <div className="card p-6">
           <h2 className="text-lg font-semibold">Benchmark</h2>
           <p className="mt-2 text-sm leading-6 text-muted">
-            Governing benchmark: <span className="font-medium text-foreground">{FUND_CONFIG.benchmarkName}</span>.
-            The website deliberately does not substitute the Nifty 500 price index for TRI because
-            a price index excludes constituent dividends.
+            Governing benchmark:{" "}
+            <span className="font-medium text-foreground">{FUND_CONFIG.benchmarkName}</span>.
+            Benchmark-relative performance will be added once a verified total-return series is
+            connected.
           </p>
         </div>
+
         <div className="card p-6">
           <h2 className="text-lg font-semibold">Methodology</h2>
           <p className="mt-2 text-sm leading-6 text-muted">
-            Current NAV is calculated continuously from the live portfolio value and the fixed ₹10 lakh
-            base. Legacy performance statistics below use any existing recorded valuation history;
-            automated historical NAV snapshots can be added without changing the live NAV formula.
+            Live NAV is current fund value divided by the fixed ₹10 lakh base. The performance
+            curve therefore represents cumulative NAV return, while drawdown and volatility use
+            the available daily NAV observations.
           </p>
         </div>
       </section>
