@@ -44,6 +44,7 @@ export default async function PortfolioPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {[
           ["Fund value", formatCompact(liveValue)],
+          ["Current NAV", liveNav.toFixed(4)],
           ["Since inception", formatPercent(totalReturn, false)],
           ["Equity value", formatCompact(breakdown.holdingsValue)],
           ["Cash", formatPercent(breakdown.cashPct, false)],
