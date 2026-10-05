@@ -40,7 +40,7 @@ export default async function Home() {
     liveValue: 0,
     cashBalance: null,
   }));
-  const { history, liveValue, cashBalance } = navTimeline;
+  const { history, liveValue, liveNav, cashBalance } = navTimeline;
   const breakdown = computeFundBreakdown(holdings, quotes, cashBalance ?? undefined);
   const returnPct = history.length > 1 ? totalReturnPct(liveValue) : null;
 
