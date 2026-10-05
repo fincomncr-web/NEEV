@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getQuotes } from "@/lib/yahoo";
 import { getNavTimeline } from "@/lib/google-sheet-nav";
 import { listDecisions, listHoldings } from "@/lib/portfolio-db";
-import { computeFundBreakdown, totalReturnPct, withLiveMetrics } from "@/lib/fund-engine";
+import { computeFundBreakdown, withLiveMetrics } from "@/lib/fund-engine";
 import { FUND_CONFIG, SECTORS } from "@/lib/sectors";
 import { formatCompact, formatPercent, formatPrice, formatSigned } from "@/lib/format";
 import PerformanceChart from "@/components/portfolio/PerformanceChart";
