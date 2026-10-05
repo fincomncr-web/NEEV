@@ -1,5 +1,5 @@
 import type { Holding, NavEntry } from "./portfolio-db";
-import { getCashBalance, listNavHistory } from "./portfolio-db";
+import { getCashBalance, getInceptionDate, listNavHistory } from "./portfolio-db";
 import type { QuoteData } from "./finance-types";
 import { computeFundNav, computeFundValue } from "./fund-engine";
 import { FUND_CONFIG } from "./sectors";
@@ -26,9 +26,10 @@ export async function getNavTimeline(
   holdings: Holding[],
   quotes: QuoteData[]
 ): Promise<NavTimeline> {
-  const [rawHistory, cashBalance] = await Promise.all([
+  const [rawHistory, cashBalance, inceptionDate] = await Promise.all([
     listNavHistory(),
     getCashBalance(),
+    getInceptionDate(),
   ]);
 
   const liveValue = computeFundValue(holdings, quotes, cashBalance ?? undefined);
@@ -66,6 +67,21 @@ export async function getNavTimeline(
   const combined = existingToday
     ? history.map((entry) => (entry.date === today ? livePoint : entry))
     : [...history, livePoint];
+
+  if (inceptionDate && !combined.some((entry) => entry.date === inceptionDate)) {
+    combined.unshift({
+      id: "inception-nav",
+      date: inceptionDate,
+      nav: 1,
+      note: "Base NAV at inception.",
+      unitNav: 1,
+      totalAssets: FUND_CONFIG.notionalAum,
+      cash: FUND_CONFIG.notionalAum,
+      liabilities: 0,
+      valuationStatus: "BASE",
+      priceCoveragePct: 100,
+    });
+  }
 
   return {
     history: combined.sort((a, b) => a.date.localeCompare(b.date)),
