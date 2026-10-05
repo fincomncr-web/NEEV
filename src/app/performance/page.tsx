@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { listNavHistory } from "@/lib/portfolio-db";
+import { getCashBalance, listHoldings, listNavHistory } from "@/lib/portfolio-db";
+import { getQuotes } from "@/lib/yahoo";
+import { computeFundNav, computeFundValue } from "@/lib/fund-engine";
 import { computePerformanceStats } from "@/lib/performance";
 import { FUND_CONFIG } from "@/lib/sectors";
 import { formatCompact, formatPercent } from "@/lib/format";
@@ -25,6 +27,12 @@ function Metric({ label, value, note }: { label: string; value: string; note?: s
 
 export default async function PerformancePage() {
   const history = await listNavHistory();
+  const holdings = await listHoldings();
+  const active = holdings.filter((h) => h.status === "active");
+  const quotes = active.length ? await getQuotes(active.map((h) => h.symbol)).catch(() => []) : [];
+  const cashBalance = await getCashBalance();
+  const currentValue = computeFundValue(holdings, quotes, cashBalance ?? undefined);
+  const currentNav = computeFundNav(currentValue);
   const stats = computePerformanceStats(history.map((x) => ({ date: x.date, value: x.nav })));
 
   return (
@@ -39,8 +47,9 @@ export default async function PerformancePage() {
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric label="Published NAV / valuation" value={history.length ? formatCompact(history[history.length - 1].nav) : "Not available"} note={history.length ? `As of ${history[history.length - 1].date}` : "No approved valuation history"} />
-        <Metric label="Total return" value={stats.totalReturnPct === null ? "Not available" : formatPercent(stats.totalReturnPct, false)} note="From first recorded valuation" />
+        <Metric label="Current NAV" value={currentNav.toFixed(4)} note="Current fund value ÷ ₹10 lakh base" />
+        <Metric label="Current fund value" value={formatCompact(currentValue)} note="Live equity + cash" />
+        <Metric label="Total return" value={formatPercent((currentNav - 1) * 100, false)} note="From the ₹10 lakh base" />
         <Metric label="Annualized return" value={stats.annualizedReturnPct === null ? "Building history" : formatPercent(stats.annualizedReturnPct, false)} />
         <Metric label="Maximum drawdown" value={stats.maxDrawdownPct === null ? "Building history" : formatPercent(stats.maxDrawdownPct, false)} /><Metric label="Annualized volatility" value={stats.annualizedVolatilityPct === null ? "Not available" : formatPercent(stats.annualizedVolatilityPct, false)} note={stats.frequency ? `Calculated from ${stats.frequency} observations` : undefined} />
       </div>
@@ -48,7 +57,7 @@ export default async function PerformancePage() {
       <section className="mt-8 card p-5">
         <div className="mb-4">
           <h2 className="text-sm font-semibold">NEEV performance history</h2>
-          <p className="mt-1 text-xs text-muted">{stats.observations} valuation observations</p>
+          <p className="mt-1 text-xs text-muted">{stats.observations} recorded legacy observations · current NAV is calculated live</p>
         </div>
         <PerformanceChart navHistory={history} benchmark={[]} />
       </section>
@@ -65,7 +74,9 @@ export default async function PerformancePage() {
         <div className="card p-6">
           <h2 className="text-lg font-semibold">Methodology</h2>
           <p className="mt-2 text-sm leading-6 text-muted">
-            Return statistics are based only on published, approved valuation observations. TWR/MWR, benchmark-relative attribution, corporate-action treatment and external-flow adjustments are withheld until the controlled transaction and cash ledgers contain sufficient history.
+            Current NAV is calculated continuously from the live portfolio value and the fixed ₹10 lakh
+            base. Legacy performance statistics below use any existing recorded valuation history;
+            automated historical NAV snapshots can be added without changing the live NAV formula.
           </p>
         </div>
       </section>
