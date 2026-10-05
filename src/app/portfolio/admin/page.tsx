@@ -15,7 +15,7 @@ import AuditAdminPanel from "@/components/portfolio/admin/AuditAdminPanel";
 
 const TABS = [
   { key: "overview", label: "Control Room" },
-  { key: "nav", label: "NAV" },
+  { key: "nav", label: "Live NAV" },
   { key: "cash", label: "Cash Ledger" },
   { key: "holdings", label: "Holdings" },
   { key: "transactions", label: "Trade Ledger" },
