@@ -30,18 +30,17 @@ export default function PerformanceChart({ navHistory, benchmark = [] }: Props) 
 
     if (nav.length === 0) return;
 
-    // Use the first date common to both series as the comparison base.
-    // This avoids comparing NEEV's inception observation with a non-trading
-    // day where the benchmark has no published value.
-    let commonStart = nav[0].date;
-    if (tri.length > 0) {
-      commonStart = tri[0].time > commonStart ? tri[0].time : commonStart;
-    }
+    // Rebase both series to exactly 100 on their first common trading date.
+    // NEEV NAV snapshots and Nifty 500 TRI observations are both end-of-day
+    // series, so this gives an apples-to-apples cumulative return comparison.
+    const benchmarkDates = new Set(tri.map((point) => point.time));
+    const commonDate =
+      tri.length > 0
+        ? nav.find((point) => benchmarkDates.has(point.date))?.date ?? nav[0].date
+        : nav[0].date;
 
-    const navBasePoint =
-      nav.find((point) => point.date >= commonStart) ?? nav[0];
-    const triBasePoint =
-      tri.find((point) => point.time >= navBasePoint.date) ?? tri[0];
+    const navBasePoint = nav.find((point) => point.date === commonDate) ?? nav[0];
+    const triBasePoint = tri.find((point) => point.time === commonDate) ?? tri[0];
 
     const chart: IChartApi = createChart(containerRef.current, {
       layout: {
