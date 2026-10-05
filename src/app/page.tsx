@@ -80,6 +80,7 @@ export default async function Home() {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label="Notional portfolio value" value={history.length || active.length ? formatCompact(liveValue) : "Not available"} note="Indicative live mark; not a statement of AUM" />
+          <Stat label="Current NAV" value={history.length || active.length ? liveNav.toFixed(4) : "Not available"} note="Current fund value ÷ ₹10 lakh base" />
           <Stat label="Since inception" value={returnPct === null ? "Not available" : formatPercent(returnPct, false)} note={returnPct === null ? "Requires approved valuation history" : "Against initial notional capital"} />
           <Stat label="Active holdings" value={String(breakdown.activeNames)} note="Charter target: 15–25 at full deployment" />
           <Stat label="Cash" value={formatPercent(breakdown.cashPct, false)} note="Charter range: 0–5%" />
