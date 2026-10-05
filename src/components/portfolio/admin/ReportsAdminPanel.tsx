@@ -100,7 +100,7 @@ export default function ReportsAdminPanel({ passcode }: { passcode: string }) {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="text-sm">Document type<select name="type" defaultValue="industry_report" className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2">{TYPES.map((x) => <option key={x.value} value={x.value}>{x.label}</option>)}</select></label>
-          <label className="text-sm">Publication status<select name="publicationStatus" defaultValue="IN_REVIEW" className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2">{STATUSES.map((s) => <option key={s}>{s}</option>)}</select></label>
+          <label className="text-sm">Publication status<select name="publicationStatus" defaultValue="PUBLISHED" className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2">{STATUSES.map((s) => <option key={s}>{s}</option>)}</select></label>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
