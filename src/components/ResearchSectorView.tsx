@@ -5,6 +5,14 @@ import type { IndustryReport } from "@/lib/reports-db";
 import { SECTORS } from "@/lib/sectors";
 import ReportsGrid from "@/components/ReportsGrid";
 
+function normaliseSector(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/\s+/g, " ");
+}
+
 export default function ResearchSectorView({
   reports,
 }: {
@@ -15,17 +23,17 @@ export default function ResearchSectorView({
   const selected = SECTORS.find((sector) => sector.slug === selectedSector) ?? SECTORS[0];
   const sectorReports = useMemo(
     () =>
-      reports.filter(
-        (report) =>
-          (report.type === "monthly_review" || report.type === "industry_report") &&
-          report.publicationStatus === "PUBLISHED" &&
-          report.sector.trim().toLowerCase() === selected?.name.trim().toLowerCase()
-      )
+      reports
+        .filter((report) => report.publicationStatus === "PUBLISHED")
+        .filter(
+          (report) =>
+            normaliseSector(report.sector) ===
+            normaliseSector(selected?.name ?? "")
+        )
         .sort((a, b) => {
           const dateOrder = b.date.localeCompare(a.date);
           return dateOrder || b.uploadedAt.localeCompare(a.uploadedAt);
-        })
-        .slice(0, MAX_SECTOR_REPORTS),
+        }),
     [reports, selected]
   );
 
@@ -63,8 +71,8 @@ export default function ResearchSectorView({
           <p className="font-label text-[10px] text-accent">SECTOR RESEARCH</p>
           <h2 className="mt-1 text-2xl font-semibold">{selected.name}</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted">
-            Published NEEV research for this sector. New work will appear here as it is completed
-            and reviewed.
+            Published NEEV research for this sector. All published reports assigned to this sector
+            are shown here, including monthly research, industry studies and other research outputs.
           </p>
         </div>
       </div>
