@@ -25,9 +25,9 @@ export default async function CompanyPage({
   const symbol = decodeURIComponent((await params).symbol).trim().toUpperCase();
   const [quote, holdings, decisions, cases] = await Promise.all([
     getQuote(symbol).catch(() => null),
-    listHoldings(),
-    listDecisions(),
-    listInvestmentCases(),
+    listHoldings().catch(() => []),
+    listDecisions().catch(() => []),
+    listInvestmentCases().catch(() => []),
   ]);
 
   const position = holdings.find((h) => h.status === "active" && h.symbol.toUpperCase() === symbol);
