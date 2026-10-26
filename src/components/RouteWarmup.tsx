@@ -20,14 +20,6 @@ const WARM_ROUTES = [
   "/disclosures",
 ];
 
-function scheduleIdle(work: () => void) {
-  if ("requestIdleCallback" in window) {
-    window.requestIdleCallback(work, { timeout: 2500 });
-    return;
-  }
-  window.setTimeout(work, 1200);
-}
-
 export default function RouteWarmup() {
   const router = useRouter();
   const pathname = usePathname();
@@ -35,26 +27,42 @@ export default function RouteWarmup() {
   useEffect(() => {
     if (pathname === "/admin" || pathname.startsWith("/admin/")) return;
 
+    try {
+      if (sessionStorage.getItem("neev-routes-warmed") === "1") return;
+      sessionStorage.setItem("neev-routes-warmed", "1");
+    } catch {
+      // If storage is unavailable, still warm the routes for this mount.
+    }
+
     let cancelled = false;
     let index = 0;
 
-    const warmNext = () => {
+    const warmBatch = () => {
       if (cancelled || index >= WARM_ROUTES.length) return;
 
-      const route = WARM_ROUTES[index++];
-      if (route !== pathname) router.prefetch(route);
+      const batch = WARM_ROUTES.slice(index, index + 3).filter((route) => route !== pathname);
+      index += 3;
 
-      window.setTimeout(
-        () => scheduleIdle(warmNext),
-        550
-      );
+      batch.forEach((route) => router.prefetch(route));
+
+      if (index < WARM_ROUTES.length) {
+        window.setTimeout(warmBatch, 900);
+      }
     };
 
-    const timer = window.setTimeout(() => scheduleIdle(warmNext), 900);
+    const start = () => window.setTimeout(warmBatch, 600);
+    const idleHandle =
+      "requestIdleCallback" in window
+        ? window.requestIdleCallback(start, { timeout: 2000 })
+        : start();
 
     return () => {
       cancelled = true;
-      window.clearTimeout(timer);
+      if ("cancelIdleCallback" in window && typeof idleHandle === "number") {
+        window.cancelIdleCallback(idleHandle);
+      } else if (typeof idleHandle === "number") {
+        window.clearTimeout(idleHandle);
+      }
     };
   }, [pathname, router]);
 
