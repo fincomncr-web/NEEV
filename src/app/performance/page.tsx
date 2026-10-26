@@ -27,15 +27,22 @@ function Metric({ label, value, note }: { label: string; value: string; note?: s
 }
 
 export default async function PerformancePage() {
-  const holdings = await listHoldings();
+  const holdings = await listHoldings().catch(() => []);
   const active = holdings.filter((h) => h.status === "active");
   const quotes = active.length
     ? await getQuotes(active.map((h) => h.symbol)).catch(() => [])
     : [];
 
-  const navTimeline = await getNavTimeline(holdings, quotes);
+  const navTimeline = await getNavTimeline(holdings, quotes).catch(() => ({
+    history: [],
+    liveValue: 0,
+    liveNav: 1,
+    source: "computed" as const,
+    authoritative: true,
+    cashBalance: null,
+  }));
   const { history, liveValue, liveNav } = navTimeline;
-  const benchmark = await getNifty500TriHistory(history[0]?.date);
+  const benchmark = await getNifty500TriHistory(history[0]?.date).catch(() => []);
   const stats = computePerformanceStats(
     history.map((x) => ({ date: x.date, value: x.nav }))
   );
