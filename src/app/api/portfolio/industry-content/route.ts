@@ -9,6 +9,7 @@ import {
 import { getLayer, getSector } from "@/lib/sectors";
 
 export async function GET(req: NextRequest) {
+  if (!isAdminRequest(req)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   const sector = req.nextUrl.searchParams.get("sector");
   const content = sector ? await listIndustryContent(sector) : await listAllIndustryContent();
   return NextResponse.json({ content });
