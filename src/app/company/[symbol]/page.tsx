@@ -9,8 +9,8 @@ import { getQuote } from "@/lib/yahoo";
 import { listDecisions, listHoldings, listInvestmentCases } from "@/lib/portfolio-db";
 import { formatCompact, formatPrice, formatSigned } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+
+export const revalidate = 30;
 
 export const metadata: Metadata = {
   title: "Company Terminal | NEEV",
