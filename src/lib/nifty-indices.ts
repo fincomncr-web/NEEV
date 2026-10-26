@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { FUND_CONFIG } from "./sectors";
 
 export interface BenchmarkPoint {
@@ -67,7 +68,7 @@ async function fetchTriChunk(start: Date, end: Date): Promise<BenchmarkPoint[]> 
     .filter((row): row is BenchmarkPoint => row !== null);
 }
 
-export async function getNifty500TriHistory(startDate?: string): Promise<BenchmarkPoint[]> {
+async function getNifty500TriHistoryUncached(startDate?: string): Promise<BenchmarkPoint[]> {
   const end = new Date();
   end.setUTCHours(0, 0, 0, 0);
 
@@ -98,5 +99,11 @@ export async function getNifty500TriHistory(startDate?: string): Promise<Benchma
   for (const row of chunks) unique.set(row.time, row);
   return [...unique.values()].sort((a, b) => a.time.localeCompare(b.time));
 }
+
+export const getNifty500TriHistory = unstable_cache(
+  async (startDate?: string) => getNifty500TriHistoryUncached(startDate),
+  ["nifty500-tri-history"],
+  { revalidate: 3600 }
+);
 
 export const NIFTY500_TRI_NAME = FUND_CONFIG.benchmarkName;
