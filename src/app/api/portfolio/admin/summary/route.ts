@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { getCashBalance, listAllIndustryContent, listDecisions, listHoldings, listInvestmentCases, listTransactions } from "@/lib/portfolio-db";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { isAdminConfigured } from "@/lib/admin-auth";
 import { listReports } from "@/lib/reports-db";
 
 export async function GET(req: NextRequest) {
@@ -44,7 +45,7 @@ export async function GET(req: NextRequest) {
       readiness: {
         supabase: isSupabaseConfigured,
         auth: !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        adminSession: !!process.env.REPORTS_UPLOAD_PASSCODE,
+        adminSession: isAdminConfigured(),
         ledger: isSupabaseConfigured,
       },
     };
