@@ -8,13 +8,13 @@ import { formatCompact, formatPercent } from "@/lib/format";
 import PerformanceChart from "@/components/portfolio/PerformanceChart";
 import { getNifty500TriHistory } from "@/lib/nifty-indices";
 
-export const dynamic = "force-dynamic";
+
+export const revalidate = 30;
 
 export const metadata: Metadata = {
   title: "Performance",
   description: "NEEV portfolio performance, NAV returns and risk statistics.",
 };
-export const revalidate = 0;
 
 function Metric({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
