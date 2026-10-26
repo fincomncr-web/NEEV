@@ -192,8 +192,12 @@ export async function recordNavSnapshot(input: {
 }
 export async function listTransactions(): Promise<Transaction[]> {
   if (!isSupabaseConfigured) return [];
-  const { data, error } = await supabase.from("transactions").select("*")
-    .eq("status", "POSTED").order("trade_date", { ascending: false }).order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("id,symbol,company_name,sector_code,transaction_type,trade_date,settlement_date,quantity,price,gross_amount,fees,taxes,decision_id,status,reference,notes,created_at")
+    .eq("status", "POSTED")
+    .order("trade_date", { ascending: false })
+    .order("created_at", { ascending: false });
   if (error) {
     // A new Supabase project may not have the transaction ledger yet.
     // Treat it as empty so public pages can build and render while the schema
