@@ -3,7 +3,10 @@ import { revalidatePath } from "next/cache";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { addDecision, listDecisions } from "@/lib/portfolio-db";
 const VALID_DECISIONS=["BUY","HOLD","SELL"],VALID_STATUS=["DRAFT","APPROVED","REJECTED","AMENDED","SUPERSEDED"];
-export async function GET(){return NextResponse.json({decisions:await listDecisions()});}
+export async function GET(req: NextRequest){
+ if(!isAdminRequest(req))return NextResponse.json({error:"Unauthorized."},{status:401});
+ return NextResponse.json({decisions:await listDecisions()});
+}
 export async function POST(req:NextRequest){
  const body=await req.json().catch(()=>null);if(!isAdminRequest(req, body?.passcode))return NextResponse.json({error:"Invalid admin passcode."},{status:401});
  const date=String(body?.date??"").trim(),sector=String(body?.sector??"").trim(),decision=String(body?.decision??"").trim().toUpperCase(),rationale=String(body?.rationale??"").trim();
