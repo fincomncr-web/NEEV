@@ -20,7 +20,7 @@ function timeAgo(iso: string): string {
 }
 
 export default async function NewsPage() {
-  const news = await getNews();
+  const news = await getNews().catch(() => []);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
