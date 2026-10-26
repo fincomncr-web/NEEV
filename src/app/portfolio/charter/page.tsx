@@ -11,6 +11,8 @@ function weightPct(value: number): string {
   return `${value.toFixed(2)}%`;
 }
 
+export const revalidate = 30;
+
 export const metadata: Metadata = {
   title: "Fund Charter",
   description:
@@ -19,7 +21,6 @@ export const metadata: Metadata = {
 
 // Live compliance figures depend on current holdings + market quotes, so this
 // page renders fresh on every request rather than serving a cached copy.
-export const revalidate = 0;
 
 function LimitCard({
   label,
