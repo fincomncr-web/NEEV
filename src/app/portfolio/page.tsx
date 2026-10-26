@@ -17,14 +17,24 @@ export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
 export default async function PortfolioPage() {
-  const [holdings, decisions] = await Promise.all([listHoldings(), listDecisions()]);
+  const [holdings, decisions] = await Promise.all([
+    listHoldings().catch(() => []),
+    listDecisions().catch(() => []),
+  ]);
   const activeHoldings = holdings.filter((h) => h.status === "active");
   const quotes = activeHoldings.length
     ? await getQuotes(activeHoldings.map((h) => h.symbol)).catch(() => [])
     : [];
-  const { history, liveValue, liveNav, cashBalance } = await getNavTimeline(holdings, quotes);
+  const { history, liveValue, liveNav, cashBalance } = await getNavTimeline(holdings, quotes).catch(() => ({
+    history: [],
+    liveValue: 0,
+    liveNav: 1,
+    source: "computed" as const,
+    authoritative: true,
+    cashBalance: null,
+  }));
   const breakdown = computeFundBreakdown(holdings, quotes, cashBalance ?? undefined);
-  const benchmark = await getNifty500TriHistory(history[0]?.date);
+  const benchmark = await getNifty500TriHistory(history[0]?.date).catch(() => []);
   const totalReturn = (liveNav - 1) * 100;
   const holdingsWithLive = withLiveMetrics(activeHoldings, quotes);
 
