@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { listDecisions } from "@/lib/portfolio-db";
 import DecisionRegisterList from "@/components/portfolio/DecisionRegisterList";
 
-export const dynamic = "force-dynamic";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "IC Decision Register",
@@ -11,7 +12,6 @@ export const metadata: Metadata = {
 
 // Decisions can come from a live Google Sheet, so this page renders fresh on
 // every request rather than serving a cached copy.
-export const revalidate = 0;
 
 export default async function DecisionRegisterPage() {
   const decisions = (await listDecisions().catch(() => [])).filter((d) => d.status !== "DRAFT");
