@@ -4,7 +4,8 @@ import { addReport, deleteReport, listReports, uploadReportFile, type ReportType
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25MB
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!isAdminRequest(req)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   const reports = await listReports();
   return NextResponse.json({ reports });
 }
