@@ -53,7 +53,7 @@ function LimitCard({
 }
 
 export default async function FundCharterPage() {
-  const holdings = await getHoldings();
+  const holdings = await getHoldings().catch(() => []);
   const activeHoldings = holdings.filter((h) => h.status === "active");
   const symbols = activeHoldings.map((h) => h.symbol);
   const quotes = symbols.length > 0 ? await getQuotes(symbols).catch(() => []) : [];
