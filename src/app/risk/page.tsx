@@ -22,7 +22,10 @@ function Status({ ok, label }: { ok: boolean; label: string }) {
 }
 
 export default async function RiskPage() {
-  const [holdings, cashBalance] = await Promise.all([listHoldings(), getCashBalance()]);
+  const [holdings, cashBalance] = await Promise.all([
+    listHoldings().catch(() => []),
+    getCashBalance().catch(() => null),
+  ]);
   const active = holdings.filter((h) => h.status === "active");
   const quotes = active.length ? await getQuotes(active.map((h) => h.symbol)).catch(() => []) : [];
   const breakdown = computeFundBreakdown(holdings, quotes, cashBalance ?? undefined);
