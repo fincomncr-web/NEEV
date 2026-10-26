@@ -5,13 +5,13 @@ import { computeCharterStatus, computeFundBreakdown } from "@/lib/fund-engine";
 import { FUND_CONFIG } from "@/lib/sectors";
 import { formatPercent, formatCompact } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
+
+export const revalidate = 30;
 
 export const metadata: Metadata = {
   title: "Risk",
   description: "NEEV portfolio concentration, cash and Fund Charter risk controls.",
 };
-export const revalidate = 0;
 
 function Status({ ok, label }: { ok: boolean; label: string }) {
   return (
