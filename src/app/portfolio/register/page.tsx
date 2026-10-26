@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export const revalidate = 0;
 
 export default async function DecisionRegisterPage() {
-  const decisions = (await listDecisions()).filter((d) => d.status !== "DRAFT");
+  const decisions = (await listDecisions().catch(() => [])).filter((d) => d.status !== "DRAFT");
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
