@@ -8,13 +8,13 @@ import { computeFundBreakdown, totalReturnPct } from "@/lib/fund-engine";
 import { FUND_CONFIG, SECTORS } from "@/lib/sectors";
 import { formatCompact, formatPercent } from "@/lib/format";
 
+export const revalidate = 15;
+
 export const metadata: Metadata = {
   title: "NEEV | Student Managed Indian Equity Initiative",
   description:
     "NEEV is Finception's student-managed Indian equity investment initiative at Great Lakes Institute of Management, Gurgaon.",
 };
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
 
 function Stat({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
