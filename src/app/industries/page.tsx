@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function IndustriesPage() {
-  const reports = await listReports();
+  const reports = await listReports().catch(() => []);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
