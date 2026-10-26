@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ReportsPage() {
-  const reports = await listReports();
+  const reports = await listReports().catch(() => []);
   const libraryReports = reports.filter((report) => report.publicationStatus === "PUBLISHED").filter(
     (report) =>
       report.type !== "monthly_review" &&
