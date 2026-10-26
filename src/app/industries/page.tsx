@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import ResearchSectorView from "@/components/ResearchSectorView";
 import { listReports } from "@/lib/reports-db";
 
-export const dynamic = "force-dynamic";
+
+export const revalidate = 120;
 
 export const metadata: Metadata = {
   title: "NEEV Research",
