@@ -9,12 +9,12 @@ import { formatCompact, formatPercent, formatPrice, formatSigned } from "@/lib/f
 import PerformanceChart from "@/components/portfolio/PerformanceChart";
 import { getNifty500TriHistory } from "@/lib/nifty-indices";
 
+export const revalidate = 15;
+
 export const metadata: Metadata = {
   title: "Portfolio",
   description: "NEEV portfolio overview, holdings, allocation and Investment Committee activity.",
 };
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
 
 export default async function PortfolioPage() {
   const [holdings, decisions] = await Promise.all([
