@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { listReports } from "@/lib/reports-db";
 
-export const dynamic = "force-dynamic";
+
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Reports & Disclosures",
