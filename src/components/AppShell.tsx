@@ -2,13 +2,24 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import Sidebar from "./Sidebar";
 import Footer from "./Footer";
 
 export default function AppShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  if (isAdminRoute) {
+    return (
+      <div className="min-h-full w-full overflow-x-clip bg-background">
+        <main className="min-h-full">{children}</main>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-full w-full overflow-x-clip">
